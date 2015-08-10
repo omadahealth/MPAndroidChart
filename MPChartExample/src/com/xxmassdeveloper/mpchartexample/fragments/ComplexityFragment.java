@@ -48,7 +48,7 @@ public class ComplexityFragment extends SimpleFragment {
         
         mChart.getAxisRight().setEnabled(false);
         
-        XAxis xAxis = mChart.getXAxis();
+        XAxis xAxis = mChart.getXAxisBottom();
         xAxis.setEnabled(false);
         
         return v;

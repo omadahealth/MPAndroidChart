@@ -40,7 +40,7 @@ public class ScatterChartFrag extends SimpleFragment {
         mChart.setDrawGridBackground(false);
         mChart.setData(generateScatterData(6, 10000, 200));
         
-        XAxis xAxis = mChart.getXAxis();
+        XAxis xAxis = mChart.getXAxisBottom();
         xAxis.setEnabled(true);
         xAxis.setPosition(XAxisPosition.BOTTOM);
         

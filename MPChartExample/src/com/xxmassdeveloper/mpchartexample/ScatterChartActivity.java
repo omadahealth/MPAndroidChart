@@ -86,7 +86,7 @@ public class ScatterChartActivity extends DemoBase implements OnSeekBarChangeLis
         
         mChart.getAxisRight().setEnabled(false);
 
-        XAxis xl = mChart.getXAxis();
+        XAxis xl = mChart.getXAxisBottom();
         xl.setTypeface(tf);
         xl.setDrawGridLines(false);
     }

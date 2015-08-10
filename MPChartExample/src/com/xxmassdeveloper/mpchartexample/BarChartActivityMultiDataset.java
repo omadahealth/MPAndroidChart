@@ -91,7 +91,7 @@ public class BarChartActivityMultiDataset extends DemoBase implements OnSeekBarC
         l.setYEntrySpace(0f);
         l.setTextSize(8f);
 
-        XAxis xl = mChart.getXAxis();
+        XAxis xl = mChart.getXAxisBottom();
         xl.setTypeface(tf);
 
         YAxis leftAxis = mChart.getAxisLeft();

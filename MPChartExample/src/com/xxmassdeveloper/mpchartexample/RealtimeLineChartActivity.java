@@ -77,7 +77,7 @@ public class RealtimeLineChartActivity extends DemoBase implements
         l.setTypeface(tf);
         l.setTextColor(Color.WHITE);
 
-        XAxis xl = mChart.getXAxis();
+        XAxis xl = mChart.getXAxisBottom();
         xl.setTypeface(tf);
         xl.setTextColor(Color.WHITE);
         xl.setDrawGridLines(false);

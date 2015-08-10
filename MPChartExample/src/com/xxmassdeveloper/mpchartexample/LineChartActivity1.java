@@ -19,6 +19,7 @@ import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.Legend.LegendForm;
 import com.github.mikephil.charting.components.LimitLine;
 import com.github.mikephil.charting.components.LimitLine.LimitLabelPosition;
+import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.DataSet;
 import com.github.mikephil.charting.data.Entry;
@@ -26,9 +27,9 @@ import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.data.filter.Approximator;
 import com.github.mikephil.charting.data.filter.Approximator.ApproximatorType;
+import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.OnChartGestureListener;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
-import com.github.mikephil.charting.highlight.Highlight;
 import com.xxmassdeveloper.mpchartexample.custom.MyMarkerView;
 import com.xxmassdeveloper.mpchartexample.notimportant.DemoBase;
 
@@ -101,8 +102,15 @@ public class LineChartActivity1 extends DemoBase implements OnSeekBarChangeListe
 //        llXAxis.setLabelPosition(LimitLabelPosition.POS_RIGHT);
 //        llXAxis.setTextSize(10f);
 //        
-//        XAxis xAxis = mChart.getXAxis();
+        XAxis xAxisBottom = mChart.getXAxisBottom();
+        xAxisBottom.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxisBottom.setAxisLineWidth(0);
+
+        XAxis xAxisTop = mChart.getXAxisTop();
+        xAxisTop.setPosition(XAxis.XAxisPosition.TOP);
+        xAxisTop.setAxisLineWidth(0);
 //        xAxis.addLimitLine(llXAxis);
+
         
         LimitLine ll1 = new LimitLine(130f, "Upper Limit");
         ll1.setLineWidth(4f);

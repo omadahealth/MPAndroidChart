@@ -62,7 +62,7 @@ public class CombinedChartActivity extends DemoBase {
         YAxis leftAxis = mChart.getAxisLeft();
         leftAxis.setDrawGridLines(false);
 
-        XAxis xAxis = mChart.getXAxis();
+        XAxis xAxis = mChart.getXAxisBottom();
         xAxis.setPosition(XAxisPosition.BOTH_SIDED);
 
         CombinedData data = new CombinedData(mMonths);

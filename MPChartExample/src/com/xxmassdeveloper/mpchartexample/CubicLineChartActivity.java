@@ -76,7 +76,7 @@ public class CubicLineChartActivity extends DemoBase implements OnSeekBarChangeL
         
         tf = Typeface.createFromAsset(getAssets(), "OpenSans-Regular.ttf");
         
-        XAxis x = mChart.getXAxis();
+        XAxis x = mChart.getXAxisBottom();
         x.setTypeface(tf);
         x.setEnabled(false);
         

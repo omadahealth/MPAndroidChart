@@ -89,7 +89,7 @@ public class InvertedLineChartActivity extends DemoBase implements OnSeekBarChan
         // highlighted Entry)
         mChart.setHighlightEnabled(false);
         
-        XAxis xl = mChart.getXAxis();
+        XAxis xl = mChart.getXAxisBottom();
         xl.setAvoidFirstLastClipping(true);
         
         YAxis leftAxis = mChart.getAxisLeft();

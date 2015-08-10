@@ -93,7 +93,7 @@ public class BubbleChartActivity extends DemoBase implements OnSeekBarChangeList
         
         mChart.getAxisRight().setEnabled(false);
 
-        XAxis xl = mChart.getXAxis();
+        XAxis xl = mChart.getXAxisBottom();
         xl.setPosition(XAxis.XAxisPosition.BOTTOM);
         xl.setTypeface(tf);
     }

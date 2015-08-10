@@ -1,7 +1,5 @@
 package com.xxmassdeveloper.mpchartexample;
 
-import java.util.ArrayList;
-
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -30,6 +28,8 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.xxmassdeveloper.mpchartexample.custom.MyValueFormatter;
 import com.xxmassdeveloper.mpchartexample.notimportant.DemoBase;
+
+import java.util.ArrayList;
 
 public class StackedBarActivity extends DemoBase implements OnSeekBarChangeListener, OnChartValueSelectedListener {
 
@@ -74,7 +74,7 @@ public class StackedBarActivity extends DemoBase implements OnSeekBarChangeListe
 		yLabels.setValueFormatter(new MyValueFormatter());
 		mChart.getAxisRight().setEnabled(false);
 
-		XAxis xLabels = mChart.getXAxis();
+		XAxis xLabels = mChart.getXAxisBottom();
 		xLabels.setPosition(XAxisPosition.TOP);
 
 		// mChart.setDrawXLabels(false);

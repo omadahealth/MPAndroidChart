@@ -56,7 +56,7 @@ public class BarChartFrag extends SimpleFragment implements OnChartGestureListen
 
         mChart.getAxisRight().setEnabled(false);
         
-        XAxis xAxis = mChart.getXAxis();
+        XAxis xAxis = mChart.getXAxisBottom();
         xAxis.setEnabled(false);
         
         // programatically add the chart

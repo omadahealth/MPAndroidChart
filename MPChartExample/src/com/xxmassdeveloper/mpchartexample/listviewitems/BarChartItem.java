@@ -52,7 +52,7 @@ public class BarChartItem extends ChartItem {
         holder.chart.setDrawGridBackground(false);
         holder.chart.setDrawBarShadow(false);
 
-        XAxis xAxis = holder.chart.getXAxis();
+        XAxis xAxis = holder.chart.getXAxisBottom();
         xAxis.setPosition(XAxisPosition.BOTTOM);
         xAxis.setTypeface(mTf);
         xAxis.setDrawGridLines(false);

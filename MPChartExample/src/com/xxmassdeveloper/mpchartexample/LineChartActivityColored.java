@@ -86,7 +86,7 @@ public class LineChartActivityColored extends DemoBase {
         chart.getAxisLeft().setEnabled(false);
         chart.getAxisRight().setEnabled(false);
 
-        chart.getXAxis().setEnabled(false);
+        chart.getXAxisBottom().setEnabled(false);
 
         // animate calls invalidate()...
         chart.animateX(2500);

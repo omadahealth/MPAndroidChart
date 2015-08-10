@@ -39,9 +39,6 @@ import com.github.mikephil.charting.utils.PointD;
 import com.github.mikephil.charting.utils.Transformer;
 import com.github.mikephil.charting.utils.Utils;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Base-class of LineChart, BarChart, ScatterChart and CandleStickChart.
  * 
@@ -105,7 +102,8 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleData<? exte
     protected YAxis mAxisRight;
 
     /** the object representing the labels on the x-axis */
-    protected XAxis mXAxis;
+    protected XAxis mXAxisTop;
+    protected XAxis mXAxisBottom;
 
     protected YAxisRenderer mAxisRendererLeft;
     protected YAxisRenderer mAxisRendererRight;
@@ -113,7 +111,8 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleData<? exte
     protected Transformer mLeftAxisTransformer;
     protected Transformer mRightAxisTransformer;
 
-    protected XAxisRenderer mXAxisRenderer;
+    protected XAxisRenderer mXAxisRendererTop;
+    protected XAxisRenderer mXAxisRendererBottom;
 
     // /** the approximator object used for data filtering */
     // private Approximator mApproximator;
@@ -137,7 +136,8 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleData<? exte
         mAxisLeft = new YAxis(AxisDependency.LEFT);
         mAxisRight = new YAxis(AxisDependency.RIGHT);
 
-        mXAxis = new XAxis();
+        mXAxisTop = new XAxis();
+        mXAxisBottom = new XAxis();
 
         mLeftAxisTransformer = new Transformer(mViewPortHandler);
         mRightAxisTransformer = new Transformer(mViewPortHandler);
@@ -145,7 +145,8 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleData<? exte
         mAxisRendererLeft = new YAxisRenderer(mViewPortHandler, mAxisLeft, mLeftAxisTransformer);
         mAxisRendererRight = new YAxisRenderer(mViewPortHandler, mAxisRight, mRightAxisTransformer);
 
-        mXAxisRenderer = new XAxisRenderer(mViewPortHandler, mXAxis, mLeftAxisTransformer);
+        mXAxisRendererTop = new XAxisRenderer(mViewPortHandler, mXAxisTop, mLeftAxisTransformer);
+        mXAxisRendererBottom = new XAxisRenderer(mViewPortHandler, mXAxisBottom, mLeftAxisTransformer);
 
         mHighlighter = new ChartHighlighter(this);
 
@@ -177,8 +178,10 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleData<? exte
         long starttime = System.currentTimeMillis();
         calcModulus();
 
-        mXAxisRenderer.calcXBounds(this, mXAxis.mAxisLabelModulus);
-        mRenderer.calcXBounds(this, mXAxis.mAxisLabelModulus);
+        mXAxisRendererTop.calcXBounds(this, mXAxisTop.mAxisLabelModulus);
+        mXAxisRendererBottom.calcXBounds(this, mXAxisBottom.mAxisLabelModulus);
+        mRenderer.calcXBounds(this, mXAxisTop.mAxisLabelModulus);
+        mRenderer.calcXBounds(this, mXAxisBottom.mAxisLabelModulus);
 
         // execute all drawing commands
         drawGridBackground(canvas);
@@ -188,7 +191,8 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleData<? exte
         if (mAxisRight.isEnabled())
             mAxisRendererRight.computeAxis(mAxisRight.mAxisMinimum, mAxisRight.mAxisMaximum);
 
-        mXAxisRenderer.renderAxisLine(canvas);
+        mXAxisRendererTop.renderAxisLine(canvas);
+        mXAxisRendererBottom.renderAxisLine(canvas);
         mAxisRendererLeft.renderAxisLine(canvas);
         mAxisRendererRight.renderAxisLine(canvas);
 
@@ -214,12 +218,16 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleData<? exte
         int clipRestoreCount = canvas.save();
         canvas.clipRect(mViewPortHandler.getContentRect());
 
-        mXAxisRenderer.renderGridLines(canvas);
+        mXAxisRendererBottom.renderGridLines(canvas);
+        mXAxisRendererTop.renderGridLines(canvas);
         mAxisRendererLeft.renderGridLines(canvas);
         mAxisRendererRight.renderGridLines(canvas);
 
-        if (mXAxis.isDrawLimitLinesBehindDataEnabled())
-            mXAxisRenderer.renderLimitLines(canvas);
+        if (mXAxisBottom.isDrawLimitLinesBehindDataEnabled())
+            mXAxisRendererBottom.renderLimitLines(canvas);
+
+        if (mXAxisTop.isDrawLimitLinesBehindDataEnabled())
+            mXAxisRendererTop.renderLimitLines(canvas);
 
         if (mAxisLeft.isDrawLimitLinesBehindDataEnabled())
             mAxisRendererLeft.renderLimitLines(canvas);
@@ -229,8 +237,11 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleData<? exte
 
         mRenderer.drawData(canvas);
 
-        if (!mXAxis.isDrawLimitLinesBehindDataEnabled())
-            mXAxisRenderer.renderLimitLines(canvas);
+        if (!mXAxisBottom.isDrawLimitLinesBehindDataEnabled())
+            mXAxisRendererBottom.renderLimitLines(canvas);
+
+        if (!mXAxisTop.isDrawLimitLinesBehindDataEnabled())
+            mXAxisRendererTop.renderLimitLines(canvas);
 
         if (!mAxisLeft.isDrawLimitLinesBehindDataEnabled())
             mAxisRendererLeft.renderLimitLines(canvas);
@@ -247,7 +258,8 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleData<? exte
 
         mRenderer.drawExtras(canvas);
 
-        mXAxisRenderer.renderAxisLabels(canvas);
+        mXAxisRendererTop.renderAxisLabels(canvas);
+        mXAxisRendererBottom.renderAxisLabels(canvas);
         mAxisRendererLeft.renderAxisLabels(canvas);
         mAxisRendererRight.renderAxisLabels(canvas);
 
@@ -320,7 +332,8 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleData<? exte
         mAxisRendererLeft.computeAxis(mAxisLeft.mAxisMinimum, mAxisLeft.mAxisMaximum);
         mAxisRendererRight.computeAxis(mAxisRight.mAxisMinimum, mAxisRight.mAxisMaximum);
 
-        mXAxisRenderer.computeAxis(mData.getXValAverageLength(), mData.getXVals());
+        mXAxisRendererTop.computeAxis(mData.getXValAverageLength(), mData.getXVals());
+        mXAxisRendererBottom.computeAxis(mData.getXValAverageLength(), mData.getXVals());
 
         if (mLegend != null)
             mLegendRenderer.computeLegend(mData);
@@ -452,20 +465,40 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleData<? exte
                         .getPaintAxisLabels());
             }
 
-            if (mXAxis.isEnabled() && mXAxis.isDrawLabelsEnabled()) {
+            if (mXAxisBottom.isEnabled() && mXAxisBottom.isDrawLabelsEnabled()) {
 
-                float xlabelheight = mXAxis.mLabelHeight * 2f;
+                float xlabelheight = mXAxisBottom.mLabelHeight * 2f;
 
                 // offsets for x-labels
-                if (mXAxis.getPosition() == XAxisPosition.BOTTOM) {
+                if (mXAxisBottom.getPosition() == XAxisPosition.BOTTOM) {
 
                     offsetBottom += xlabelheight;
 
-                } else if (mXAxis.getPosition() == XAxisPosition.TOP) {
+                } else if (mXAxisBottom.getPosition() == XAxisPosition.TOP) {
 
                     offsetTop += xlabelheight;
 
-                } else if (mXAxis.getPosition() == XAxisPosition.BOTH_SIDED) {
+                } else if (mXAxisBottom.getPosition() == XAxisPosition.BOTH_SIDED) {
+
+                    offsetBottom += xlabelheight;
+                    offsetTop += xlabelheight;
+                }
+            }
+
+            if (mXAxisTop.isEnabled() && mXAxisTop.isDrawLabelsEnabled()) {
+
+                float xlabelheight = mXAxisTop.mLabelHeight * 2f;
+
+                // offsets for x-labels
+                if (mXAxisTop.getPosition() == XAxisPosition.BOTTOM) {
+
+                    offsetBottom += xlabelheight;
+
+                } else if (mXAxisTop.getPosition() == XAxisPosition.TOP) {
+
+                    offsetTop += xlabelheight;
+
+                } else if (mXAxisTop.getPosition() == XAxisPosition.BOTH_SIDED) {
 
                     offsetBottom += xlabelheight;
                     offsetTop += xlabelheight;
@@ -498,26 +531,31 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleData<? exte
      */
     protected void calcModulus() {
 
-        if (mXAxis == null || !mXAxis.isEnabled())
+        if (mXAxisTop == null || !mXAxisTop.isEnabled() || mXAxisBottom == null || !mXAxisBottom.isEnabled())
             return;
 
-        if (!mXAxis.isAxisModulusCustom()) {
+        calcModulus(mXAxisTop);
+        calcModulus(mXAxisBottom);
+    }
+
+    private void calcModulus(XAxis xAxis) {
+        if (!xAxis.isAxisModulusCustom()) {
 
             float[] values = new float[9];
             mViewPortHandler.getMatrixTouch().getValues(values);
 
-            mXAxis.mAxisLabelModulus = (int) Math
-                    .ceil((mData.getXValCount() * mXAxis.mLabelWidth)
+            xAxis.mAxisLabelModulus = (int) Math
+                    .ceil((mData.getXValCount() * xAxis.mLabelWidth)
                             / (mViewPortHandler.contentWidth() * values[Matrix.MSCALE_X]));
 
         }
 
         if (mLogEnabled)
-            Log.i(LOG_TAG, "X-Axis modulus: " + mXAxis.mAxisLabelModulus + ", x-axis label width: "
-                    + mXAxis.mLabelWidth + ", content width: " + mViewPortHandler.contentWidth());
+            Log.i(LOG_TAG, "X-Axis modulus: " + xAxis.mAxisLabelModulus + ", x-axis label width: "
+                    + xAxis.mLabelWidth + ", content width: " + mViewPortHandler.contentWidth());
 
-        if (mXAxis.mAxisLabelModulus < 1)
-            mXAxis.mAxisLabelModulus = 1;
+        if (xAxis.mAxisLabelModulus < 1)
+            xAxis.mAxisLabelModulus = 1;
     }
 
     @Override
@@ -820,7 +858,7 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleData<? exte
     public void centerViewTo(int xIndex, float yValue, AxisDependency axis) {
 
         float valsInView = getDeltaY(axis) / mViewPortHandler.getScaleY();
-        float xsInView = getXAxis().getValues().size() / mViewPortHandler.getScaleX();
+        float xsInView = (mXAxisTop.getValues().size() + mXAxisBottom.getValues().size()) / mViewPortHandler.getScaleX();
 
         Runnable job = new MoveViewJob(mViewPortHandler,
                 xIndex - xsInView / 2f, yValue + valsInView / 2f,
@@ -1279,8 +1317,19 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleData<? exte
      * 
      * @return
      */
-    public XAxis getXAxis() {
-        return mXAxis;
+    public XAxis getXAxisTop() {
+        return mXAxisTop;
+    }
+
+    /**
+     * Returns the object representing all x-labels, this method can be used to
+     * acquire the XAxis object and modify it (e.g. change the position of the
+     * labels)
+     *
+     * @return
+     */
+    public XAxis getXAxisBottom() {
+        return mXAxisBottom;
     }
 
     /**
@@ -1359,7 +1408,7 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleData<? exte
     }
 
     public XAxisRenderer getRendererXAxis() {
-        return mXAxisRenderer;
+        return mXAxisRendererBottom;
     }
 
     /**
@@ -1367,7 +1416,7 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleData<? exte
      * @param xAxisRenderer
      */
     public void setXAxisRenderer(XAxisRenderer xAxisRenderer) {
-        mXAxisRenderer = xAxisRenderer;
+        mXAxisRendererBottom = xAxisRenderer;
     }
 
     public YAxisRenderer getRendererLeftYAxis() {

@@ -65,7 +65,7 @@ public class DrawChartActivity extends DemoBase implements OnChartValueSelectedL
 
         Typeface tf = Typeface.createFromAsset(getAssets(), "OpenSans-Regular.ttf");
 
-        XAxis xl = mChart.getXAxis();
+        XAxis xl = mChart.getXAxisBottom();
         xl.setTypeface(tf);
         xl.setAvoidFirstLastClipping(true);
 

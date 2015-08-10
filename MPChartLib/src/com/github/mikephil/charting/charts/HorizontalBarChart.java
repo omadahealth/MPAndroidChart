@@ -53,7 +53,7 @@ public class HorizontalBarChart extends BarChart {
 
 		mAxisRendererLeft = new YAxisRendererHorizontalBarChart(mViewPortHandler, mAxisLeft, mLeftAxisTransformer);
 		mAxisRendererRight = new YAxisRendererHorizontalBarChart(mViewPortHandler, mAxisRight, mRightAxisTransformer);
-		mXAxisRenderer = new XAxisRendererHorizontalBarChart(mViewPortHandler, mXAxis, mLeftAxisTransformer, this);
+		mXAxisRendererBottom = new XAxisRendererHorizontalBarChart(mViewPortHandler, mXAxisBottom, mLeftAxisTransformer, this);
 	}
 
 	@Override
@@ -94,20 +94,20 @@ public class HorizontalBarChart extends BarChart {
 			offsetBottom += mAxisRight.getRequiredHeightSpace(mAxisRendererRight.getPaintAxisLabels());
 		}
 
-		float xlabelwidth = mXAxis.mLabelWidth;
+		float xlabelwidth = mXAxisBottom.mLabelWidth;
 
-		if (mXAxis.isEnabled()) {
+		if (mXAxisBottom.isEnabled()) {
 
 			// offsets for x-labels
-			if (mXAxis.getPosition() == XAxisPosition.BOTTOM) {
+			if (mXAxisBottom.getPosition() == XAxisPosition.BOTTOM) {
 
 				offsetLeft += xlabelwidth;
 
-			} else if (mXAxis.getPosition() == XAxisPosition.TOP) {
+			} else if (mXAxisBottom.getPosition() == XAxisPosition.TOP) {
 
 				offsetRight += xlabelwidth;
 
-			} else if (mXAxis.getPosition() == XAxisPosition.BOTH_SIDED) {
+			} else if (mXAxisBottom.getPosition() == XAxisPosition.BOTH_SIDED) {
 
 				offsetLeft += xlabelwidth;
 				offsetRight += xlabelwidth;
@@ -145,11 +145,11 @@ public class HorizontalBarChart extends BarChart {
 		float[] values = new float[9];
 		mViewPortHandler.getMatrixTouch().getValues(values);
 
-		mXAxis.mAxisLabelModulus = (int) Math.ceil((mData.getXValCount() * mXAxis.mLabelHeight)
+		mXAxisBottom.mAxisLabelModulus = (int) Math.ceil((mData.getXValCount() * mXAxisBottom.mLabelHeight)
 				/ (mViewPortHandler.contentHeight() * values[Matrix.MSCALE_Y]));
 
-		if (mXAxis.mAxisLabelModulus < 1)
-			mXAxis.mAxisLabelModulus = 1;
+		if (mXAxisBottom.mAxisLabelModulus < 1)
+			mXAxisBottom.mAxisLabelModulus = 1;
 	}
 
 	@Override

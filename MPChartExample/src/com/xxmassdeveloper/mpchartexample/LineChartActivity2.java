@@ -104,7 +104,7 @@ public class LineChartActivity2 extends DemoBase implements OnSeekBarChangeListe
         l.setPosition(LegendPosition.BELOW_CHART_LEFT);
 //        l.setYOffset(11f);
 
-        XAxis xAxis = mChart.getXAxis();
+        XAxis xAxis = mChart.getXAxisBottom();
         xAxis.setTypeface(tf);
         xAxis.setTextSize(12f);
         xAxis.setTextColor(Color.WHITE);

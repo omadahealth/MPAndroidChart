@@ -9,8 +9,6 @@ import com.github.mikephil.charting.components.YAxis.AxisDependency;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
-import com.github.mikephil.charting.data.DataSet;
-import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.highlight.BarHighlighter;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.interfaces.BarDataProvider;
@@ -59,7 +57,7 @@ public class BarChart extends BarLineChartBase<BarData> implements BarDataProvid
 		super.init();
 
 		mRenderer = new BarChartRenderer(this, mAnimator, mViewPortHandler);
-		mXAxisRenderer = new XAxisRendererBarChart(mViewPortHandler, mXAxis, mLeftAxisTransformer, this);
+		mXAxisRendererBottom = new XAxisRendererBarChart(mViewPortHandler, mXAxisBottom, mLeftAxisTransformer, this);
 
 		mHighlighter = new BarHighlighter(this);
 

@@ -78,7 +78,7 @@ public class BarChartActivitySinus extends DemoBase implements OnSeekBarChangeLi
 
         mTf = Typeface.createFromAsset(getAssets(), "OpenSans-Regular.ttf");
 
-        XAxis xAxis = mChart.getXAxis();
+        XAxis xAxis = mChart.getXAxisBottom();
         xAxis.setPosition(XAxisPosition.BOTTOM);
         xAxis.setTypeface(mTf);
         xAxis.setDrawGridLines(false);
