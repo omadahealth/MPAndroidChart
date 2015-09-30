@@ -2,6 +2,7 @@
 package com.xxmassdeveloper.mpchartexample;
 
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -94,7 +95,7 @@ public class LineChartActivity1 extends DemoBase implements OnSeekBarChangeListe
 
         // set the marker to the chart
         mChart.setMarkerView(mv);
-        
+
         // x-axis limit line
 //        LimitLine llXAxis = new LimitLine(10f, "Index 10");
 //        llXAxis.setLineWidth(4f);
@@ -112,17 +113,31 @@ public class LineChartActivity1 extends DemoBase implements OnSeekBarChangeListe
 //        xAxis.addLimitLine(llXAxis);
 
         
+        LimitLine llXAxis = new LimitLine(10f, "Index 10");
+        llXAxis.setLineWidth(4f);
+        llXAxis.enableDashedLine(10f, 10f, 0f);
+        llXAxis.setLabelPosition(LimitLabelPosition.RIGHT_BOTTOM);
+        llXAxis.setTextSize(10f);
+
+        XAxis xAxis = mChart.getXAxis();
+        //xAxis.setValueFormatter(new MyCustomXAxisValueFormatter());
+        //xAxis.addLimitLine(llXAxis); // add x-axis limit line
+
+        Typeface tf = Typeface.createFromAsset(getAssets(), "OpenSans-Regular.ttf");
+
         LimitLine ll1 = new LimitLine(130f, "Upper Limit");
         ll1.setLineWidth(4f);
         ll1.enableDashedLine(10f, 10f, 0f);
-        ll1.setLabelPosition(LimitLabelPosition.POS_RIGHT);
+        ll1.setLabelPosition(LimitLabelPosition.RIGHT_TOP);
         ll1.setTextSize(10f);
+        ll1.setTypeface(tf);
 
         LimitLine ll2 = new LimitLine(-30f, "Lower Limit");
         ll2.setLineWidth(4f);
         ll2.enableDashedLine(10f, 10f, 0f);
-        ll2.setLabelPosition(LimitLabelPosition.POS_RIGHT);
+        ll2.setLabelPosition(LimitLabelPosition.RIGHT_BOTTOM);
         ll2.setTextSize(10f);
+        ll2.setTypeface(tf);
 
         YAxis leftAxis = mChart.getAxisLeft();
         leftAxis.removeAllLimitLines(); // reset all limit lines to avoid overlapping lines
@@ -133,22 +148,25 @@ public class LineChartActivity1 extends DemoBase implements OnSeekBarChangeListe
         leftAxis.setStartAtZero(false);
         //leftAxis.setYOffset(20f);
         leftAxis.enableGridDashedLine(10f, 10f, 0f);
-        
+
         // limit lines are drawn behind data (and not on top)
         leftAxis.setDrawLimitLinesBehindData(true);
 
         mChart.getAxisRight().setEnabled(false);
 
+        //mChart.getViewPortHandler().setMaximumScaleY(2f);
+        //mChart.getViewPortHandler().setMaximumScaleX(2f);
+
         // add data
         setData(45, 100);
-        
+
 //        mChart.setVisibleXRange(20);
 //        mChart.setVisibleYRange(20f, AxisDependency.LEFT);
 //        mChart.centerViewTo(20, 50, AxisDependency.LEFT);
-        
+
         mChart.animateX(2500, Easing.EasingOption.EaseInOutQuart);
 //        mChart.invalidate();
-        
+
         // get the legend (only possible after setting data)
         Legend l = mChart.getLegend();
 
@@ -159,7 +177,7 @@ public class LineChartActivity1 extends DemoBase implements OnSeekBarChangeListe
         // // dont forget to refresh the drawing
         // mChart.invalidate();
     }
-    
+
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
@@ -175,7 +193,7 @@ public class LineChartActivity1 extends DemoBase implements OnSeekBarChangeListe
     public boolean onOptionsItemSelected(MenuItem item) {
 
         switch (item.getItemId()) {
-            case R.id.actionToggleValues: { 
+            case R.id.actionToggleValues: {
                 for (DataSet<?> set : mChart.getData().getDataSets())
                     set.setDrawValues(!set.isDrawValuesEnabled());
 
@@ -273,19 +291,6 @@ public class LineChartActivity1 extends DemoBase implements OnSeekBarChangeListe
                     mChart.disableFiltering();
                 }
                 mChart.invalidate();
-
-                //
-                // for(int i = 0; i < 10; i++) {
-                // mChart.addEntry(new Entry((float) (Math.random() * 100),
-                // i+2), 0);
-                // mChart.invalidate();
-                // }
-                //
-                // Toast.makeText(getApplicationContext(), "valcount: " +
-                // mChart.getDataOriginal().getYValCount() + ", valsum: " +
-                // mChart.getDataOriginal().getYValueSum(),
-                // Toast.LENGTH_SHORT).show();
-                //
                 break;
             }
             case R.id.actionSave: {
@@ -340,8 +345,8 @@ public class LineChartActivity1 extends DemoBase implements OnSeekBarChangeListe
 
             float mult = (range + 1);
             float val = (float) (Math.random() * mult) + 3;// + (float)
-                                                           // ((mult *
-                                                           // 0.1) / 10);
+            // ((mult *
+            // 0.1) / 10);
             yVals.add(new Entry(val, i));
         }
 
@@ -352,6 +357,7 @@ public class LineChartActivity1 extends DemoBase implements OnSeekBarChangeListe
 
         // set the line to be drawn like this "- - - - - -"
         set1.enableDashedLine(10f, 5f, 0f);
+        set1.enableDashedHighlightLine(10f, 5f, 0f);
         set1.setColor(Color.BLACK);
         set1.setCircleColor(Color.BLACK);
         set1.setLineWidth(1f);
@@ -373,7 +379,7 @@ public class LineChartActivity1 extends DemoBase implements OnSeekBarChangeListe
         // set data
         mChart.setData(data);
     }
-    
+
     @Override
     public void onChartLongPressed(MotionEvent me) {
         Log.i("LongPress", "Chart longpressed.");
@@ -399,12 +405,12 @@ public class LineChartActivity1 extends DemoBase implements OnSeekBarChangeListe
         Log.i("Scale / Zoom", "ScaleX: " + scaleX + ", ScaleY: " + scaleY);
     }
 
-	@Override
-	public void onChartTranslate(MotionEvent me, float dX, float dY) {
-		Log.i("Translate / Move", "dX: " + dX + ", dY: " + dY);
-	}
+    @Override
+    public void onChartTranslate(MotionEvent me, float dX, float dY) {
+        Log.i("Translate / Move", "dX: " + dX + ", dY: " + dY);
+    }
 
-	@Override
+    @Override
     public void onValueSelected(Entry e, int dataSetIndex, Highlight h) {
         Log.i("Entry selected", e.toString());
         Log.i("", "low: " + mChart.getLowestVisibleXIndex() + ", high: " + mChart.getHighestVisibleXIndex());
