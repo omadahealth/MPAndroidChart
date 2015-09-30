@@ -119,7 +119,7 @@ public class LineChartActivity1 extends DemoBase implements OnSeekBarChangeListe
         llXAxis.setLabelPosition(LimitLabelPosition.RIGHT_BOTTOM);
         llXAxis.setTextSize(10f);
 
-        XAxis xAxis = mChart.getXAxis();
+        XAxis xAxis = mChart.getXAxisBottom();
         //xAxis.setValueFormatter(new MyCustomXAxisValueFormatter());
         //xAxis.addLimitLine(llXAxis); // add x-axis limit line
 
