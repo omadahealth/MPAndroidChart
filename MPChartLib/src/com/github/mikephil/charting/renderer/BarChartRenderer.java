@@ -32,6 +32,10 @@ public class BarChartRenderer extends DataRenderer {
 
     protected Paint mShadowPaint;
 
+    protected int mRadius;
+
+    protected boolean mIsCustomColor;
+
     public BarChartRenderer(BarDataProvider chart, ChartAnimator animator,
             ViewPortHandler viewPortHandler) {
         super(animator, viewPortHandler);
@@ -110,22 +114,34 @@ public class BarChartRenderer extends DataRenderer {
                     break;
 
                 if (mChart.isDrawBarShadowEnabled()) {
-                    c.drawRect(buffer.buffer[j], mViewPortHandler.contentTop(),
-                            buffer.buffer[j + 2],
-                            mViewPortHandler.contentBottom(), mShadowPaint);
+                    if (mRadius > 0)
+                        c.drawRoundRect(new RectF(buffer.buffer[j], mViewPortHandler.contentTop(),
+                                buffer.buffer[j + 2],
+                                mViewPortHandler.contentBottom()), mRadius, mRadius, mShadowPaint);
+                    else
+                        c.drawRect(buffer.buffer[j], mViewPortHandler.contentTop(),
+                                buffer.buffer[j + 2],
+                                mViewPortHandler.contentBottom(), mShadowPaint);
                 }
 
                 // Set the color for the currently drawn value. If the index
                 // is
                 // out of bounds, reuse colors.
                 mRenderPaint.setColor(dataSet.getColor(j / 4));
-                c.drawRect(buffer.buffer[j], buffer.buffer[j + 1], buffer.buffer[j + 2],
-                        buffer.buffer[j + 3], mRenderPaint);
+                // To have a rounded edge on the bar
+                if (mRadius > 0)
+                    c.drawRoundRect(new RectF(buffer.buffer[j], buffer.buffer[j + 1], buffer.buffer[j + 2],
+                            buffer.buffer[j + 3]), mRadius, mRadius, mRenderPaint);
+                else
+                    c.drawRect(buffer.buffer[j], buffer.buffer[j + 1], buffer.buffer[j + 2],
+                            buffer.buffer[j + 3], mRenderPaint);
             }
-        } else {
+        }
 
-            mRenderPaint.setColor(dataSet.getColor());
-
+        else {
+            if(!mIsCustomColor) {
+                mRenderPaint.setColor(dataSet.getColor());
+            }
             for (int j = 0; j < buffer.size(); j += 4) {
 
                 if (!mViewPortHandler.isInBoundsLeft(buffer.buffer[j + 2]))
@@ -135,13 +151,28 @@ public class BarChartRenderer extends DataRenderer {
                     break;
 
                 if (mChart.isDrawBarShadowEnabled()) {
-                    c.drawRect(buffer.buffer[j], mViewPortHandler.contentTop(),
-                            buffer.buffer[j + 2],
-                            mViewPortHandler.contentBottom(), mShadowPaint);
+                    if (mRadius > 0)
+                        c.drawRoundRect(new RectF(buffer.buffer[j], mViewPortHandler.contentTop(),
+                                buffer.buffer[j + 2],
+                                mViewPortHandler.contentBottom()), mRadius, mRadius, mShadowPaint);
+                    else
+                        c.drawRect(buffer.buffer[j], buffer.buffer[j + 1], buffer.buffer[j + 2],
+                                buffer.buffer[j + 3], mRenderPaint);
                 }
 
-                c.drawRect(buffer.buffer[j], buffer.buffer[j + 1], buffer.buffer[j + 2],
-                        buffer.buffer[j + 3], mRenderPaint);
+
+                // get the color from the BarEntry for specific index, then sets it before rendering
+                if(mIsCustomColor)
+                    mRenderPaint.setColor(dataSet.getEntryForXIndex(j/4).getColor());
+
+                // To have a rounded edge on the bar
+                if (mRadius > 0) {
+                    c.drawRoundRect(new RectF(buffer.buffer[j], buffer.buffer[j + 1], buffer.buffer[j + 2],
+                            buffer.buffer[j + 3]), mRadius, mRadius, mRenderPaint);
+                } else {
+                    c.drawRect(buffer.buffer[j], buffer.buffer[j + 1], buffer.buffer[j + 2],
+                            buffer.buffer[j + 3], mRenderPaint);
+                }
             }
         }
     }
@@ -354,7 +385,13 @@ public class BarChartRenderer extends DataRenderer {
 
                 prepareBarHighlight(x, y1, y2, barspaceHalf, trans);
 
-                c.drawRect(mBarRect, mHighlightPaint);
+                // To have a rounded edge on the bar
+                if (mRadius > 0) {
+                    c.drawRoundRect(mBarRect, mRadius, mRadius, mHighlightPaint);
+                }
+                else {
+                    c.drawRect(mBarRect, mHighlightPaint);
+                }
 
                 if (mChart.isDrawHighlightArrowEnabled()) {
 
@@ -396,6 +433,24 @@ public class BarChartRenderer extends DataRenderer {
                 * mViewPortHandler.getScaleX();
     }
 
+    /**
+     * setter for the circular edge for the bars
+     * @param radius
+     */
+    public void setRadius(int radius){
+        mRadius = radius;
+    }
+
+    /**
+     * boolean setter to check if the chart needs custom colors for each bars
+     * @param isCustomColor
+     */
+    public void setIsCustomColor(boolean isCustomColor) {
+        this.mIsCustomColor = isCustomColor;
+    }
+
     @Override
     public void drawExtras(Canvas c) { }
+
+
 }

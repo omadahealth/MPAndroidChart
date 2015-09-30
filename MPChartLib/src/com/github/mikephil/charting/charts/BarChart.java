@@ -40,12 +40,29 @@ public class BarChart extends BarLineChartBase<BarData> implements BarDataProvid
 	 */
 	private boolean mDrawBarShadow = false;
 
+	/**
+	 * Radius to set the bar's edge circular
+	 */
+	int mRadius;
+
+	/**
+	 * boolean to see if the each bar's color needs to be customized
+	 * @param context
+	 */
+	boolean mIsCustomColorTrue;
+
+
+
 	public BarChart(Context context) {
 		super(context);
 	}
 
 	public BarChart(Context context, AttributeSet attrs) {
 		super(context, attrs);
+		mRadius = attrs.getAttributeIntValue("http://schemas.android.com/apk/res-auto", "radius", 0);
+		((BarChartRenderer)mRenderer).setRadius(mRadius);
+		mIsCustomColorTrue = attrs.getAttributeBooleanValue("http://schemas.android.com/apk/res-auto", "custom_color", false);
+		((BarChartRenderer)mRenderer).setIsCustomColor(mIsCustomColorTrue);
 	}
 
 	public BarChart(Context context, AttributeSet attrs, int defStyle) {

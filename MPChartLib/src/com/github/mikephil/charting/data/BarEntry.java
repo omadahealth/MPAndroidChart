@@ -1,5 +1,7 @@
 package com.github.mikephil.charting.data;
 
+import android.graphics.Color;
+
 /**
  * Entry class for the BarChart. (especially stacked bars)
  * 
@@ -15,6 +17,12 @@ public class BarEntry extends Entry {
 
 	/** the sum of all positive values this entry (if stacked) contains */
 	private float mPositiveSum;
+
+
+	/**
+	 * Custom variable to set colors to individual bars -dae
+	 */
+	private int mColor;
 
 	/**
 	 * Constructor for stacked bar entries.
@@ -191,5 +199,17 @@ public class BarEntry extends Entry {
 			sum += f;
 
 		return sum;
+	}
+
+
+	/**
+	 * getter and setter for setting the color of the bar
+	 */
+	public int getColor() {
+		return mColor;
+	}
+
+	public void setColor(int color) {
+		this.mColor = color;
 	}
 }

@@ -2,6 +2,7 @@
 package com.xxmassdeveloper.mpchartexample;
 
 import android.annotation.SuppressLint;
+import android.graphics.Color;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.graphics.Typeface;
@@ -257,7 +258,12 @@ public class BarChartActivity extends DemoBase implements OnSeekBarChangeListene
         for (int i = 0; i < count; i++) {
             float mult = (range + 1);
             float val = (float) (Math.random() * mult);
-            yVals1.add(new BarEntry(val, i));
+            BarEntry bar1= new BarEntry(val, i);
+            if(i%5==0)
+                bar1.setColor(getResources().getColor(R.color.green_800));
+            if(i%2==0)
+                bar1.setColor(getResources().getColor(R.color.grey_700));
+            yVals1.add(bar1);
         }
 
         BarDataSet set1 = new BarDataSet(yVals1, "DataSet");

@@ -60,6 +60,7 @@ public class AnotherBarActivity extends DemoBase implements OnSeekBarChangeListe
         mChart.setDrawBarShadow(false);
         mChart.setDrawGridBackground(false);
 
+
         XAxis xAxis = mChart.getXAxisBottom();
         xAxis.setPosition(XAxisPosition.BOTTOM);
         xAxis.setSpaceBetweenLabels(0);
