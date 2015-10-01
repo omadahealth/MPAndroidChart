@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="BarChart">
-        <attr name="radius" format="integer" />
-        <attr name="custom_color" format="boolean"/>
+        <attr name="barchart_radius" format="integer" />
+        <attr name="barchart_custom_color" format="boolean"/>
     </declare-styleable>
 </resources>

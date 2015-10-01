@@ -59,9 +59,9 @@ public class BarChart extends BarLineChartBase<BarData> implements BarDataProvid
 
 	public BarChart(Context context, AttributeSet attrs) {
 		super(context, attrs);
-		mRadius = attrs.getAttributeIntValue("http://schemas.android.com/apk/res-auto", "radius", 0);
+		mRadius = attrs.getAttributeIntValue("http://schemas.android.com/apk/res-auto", "barchart_radius", 0);
 		((BarChartRenderer)mRenderer).setRadius(mRadius);
-		mIsCustomColorTrue = attrs.getAttributeBooleanValue("http://schemas.android.com/apk/res-auto", "custom_color", false);
+		mIsCustomColorTrue = attrs.getAttributeBooleanValue("http://schemas.android.com/apk/res-auto", "barchart_custom_color", false);
 		((BarChartRenderer)mRenderer).setIsCustomColor(mIsCustomColorTrue);
 	}
 
