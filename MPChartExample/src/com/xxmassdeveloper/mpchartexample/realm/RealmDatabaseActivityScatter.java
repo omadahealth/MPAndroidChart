@@ -34,7 +34,7 @@ public class RealmDatabaseActivityScatter extends RealmBaseActivity {
         setup(mChart);
 
         mChart.getAxisLeft().setDrawGridLines(false);
-        mChart.getXAxis().setDrawGridLines(false);
+        mChart.getXAxisBottom().setDrawGridLines(false);
         mChart.setPinchZoom(true);
     }
 

@@ -36,7 +36,7 @@ public class RealmDatabaseActivityLine extends RealmBaseActivity {
         mChart.getAxisLeft().setAxisMaxValue(150f);
         mChart.getAxisLeft().setAxisMinValue(0f);
         mChart.getAxisLeft().setDrawGridLines(false);
-        mChart.getXAxis().setDrawGridLines(false);
+        mChart.getXAxisBottom().setDrawGridLines(false);
     }
 
     @Override

@@ -547,9 +547,9 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
         }
 
         if (mLogEnabled)
-            Log.i(LOG_TAG, "X-Axis modulus: " + mXAxis.mAxisLabelModulus +
-                    ", x-axis label width: " + mXAxis.mLabelWidth +
-                    ", x-axis label rotated width: " + mXAxis.mLabelRotatedWidth +
+            Log.i(LOG_TAG, "X-Axis modulus: " + xAxis.mAxisLabelModulus +
+                    ", x-axis label width: " + xAxis.mLabelWidth +
+                    ", x-axis label rotated width: " + xAxis.mLabelRotatedWidth +
                     ", content width: " + mViewPortHandler.contentWidth());
 
         if (xAxis.mAxisLabelModulus < 1)

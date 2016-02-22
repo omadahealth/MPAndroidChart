@@ -51,7 +51,7 @@ public class BarChartPositiveNegative extends DemoBase {
 
         mChart.setDrawGridBackground(false);
 
-        XAxis xAxis = mChart.getXAxis();
+        XAxis xAxis = mChart.getXAxisBottom();
         xAxis.setPosition(XAxisPosition.BOTTOM);
         xAxis.setTypeface(mTf);
         xAxis.setDrawGridLines(false);

@@ -16,8 +16,6 @@ import com.github.mikephil.charting.components.Legend.LegendPosition;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
-import com.github.mikephil.charting.data.filter.Approximator;
-import com.github.mikephil.charting.data.filter.Approximator.ApproximatorType;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
@@ -61,8 +59,8 @@ public class MultiLineChartActivity extends DemoBase implements OnSeekBarChangeL
         mChart.getAxisLeft().setDrawGridLines(false);
         mChart.getAxisRight().setDrawAxisLine(false);
         mChart.getAxisRight().setDrawGridLines(false);
-        mChart.getXAxis().setDrawAxisLine(false);
-        mChart.getXAxis().setDrawGridLines(false);
+        mChart.getXAxisBottom().setDrawAxisLine(false);
+        mChart.getXAxisBottom().setDrawGridLines(false);
 
         // enable touch gestures
         mChart.setTouchEnabled(true);

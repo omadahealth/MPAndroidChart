@@ -35,7 +35,7 @@ public class RealmDatabaseActivityCandle extends RealmBaseActivity {
         setup(mChart);
 
         mChart.getAxisLeft().setDrawGridLines(false);
-        mChart.getXAxis().setDrawGridLines(false);
+        mChart.getXAxisBottom().setDrawGridLines(false);
     }
 
     @Override

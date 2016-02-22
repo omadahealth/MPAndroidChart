@@ -33,7 +33,7 @@ public class RealmDatabaseActivityBubble extends RealmBaseActivity {
         mChart = (BubbleChart) findViewById(R.id.chart1);
         setup(mChart);
 
-        mChart.getXAxis().setDrawGridLines(false);
+        mChart.getXAxisBottom().setDrawGridLines(false);
         mChart.getAxisLeft().setDrawGridLines(false);
         mChart.setPinchZoom(true);
     }

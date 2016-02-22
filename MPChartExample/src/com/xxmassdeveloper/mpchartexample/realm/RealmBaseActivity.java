@@ -9,10 +9,7 @@ import com.github.mikephil.charting.charts.Chart;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.ChartData;
-import com.github.mikephil.charting.formatter.DefaultYAxisValueFormatter;
 import com.github.mikephil.charting.formatter.PercentFormatter;
-import com.xxmassdeveloper.mpchartexample.custom.MyValueFormatter;
-import com.xxmassdeveloper.mpchartexample.custom.MyYAxisValueFormatter;
 import com.xxmassdeveloper.mpchartexample.custom.RealmDemoData;
 import com.xxmassdeveloper.mpchartexample.notimportant.DemoBase;
 
@@ -65,7 +62,7 @@ public abstract class RealmBaseActivity extends DemoBase {
             leftAxis.setTextColor(Color.DKGRAY);
             leftAxis.setValueFormatter(new PercentFormatter());
 
-            XAxis xAxis = mChart.getXAxis();
+            XAxis xAxis = mChart.getXAxisBottom();
             xAxis.setTypeface(mTf);
             xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
             xAxis.setTextSize(8f);
