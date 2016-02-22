@@ -20,11 +20,11 @@ import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
-import com.github.mikephil.charting.data.DataSet;
 import com.github.mikephil.charting.data.Entry;
-import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
-import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.formatter.LargeValueFormatter;
+import com.github.mikephil.charting.highlight.Highlight;
+import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.xxmassdeveloper.mpchartexample.custom.MyMarkerView;
 import com.xxmassdeveloper.mpchartexample.notimportant.DemoBase;
 
@@ -99,6 +99,7 @@ public class BarChartActivityMultiDataset extends DemoBase implements OnSeekBarC
         leftAxis.setValueFormatter(new LargeValueFormatter());
         leftAxis.setDrawGridLines(false);
         leftAxis.setSpaceTop(30f);
+        leftAxis.setAxisMinValue(0f); // this replaces setStartAtZero(true)
 
         mChart.getAxisRight().setEnabled(false);
     }
@@ -114,7 +115,7 @@ public class BarChartActivityMultiDataset extends DemoBase implements OnSeekBarC
 
         switch (item.getItemId()) {
             case R.id.actionToggleValues: {
-                for (DataSet<?> set : mChart.getData().getDataSets())
+                for (IBarDataSet set : mChart.getData().getDataSets())
                     set.setDrawValues(!set.isDrawValuesEnabled());
 
                 mChart.invalidate();
@@ -135,11 +136,10 @@ public class BarChartActivityMultiDataset extends DemoBase implements OnSeekBarC
                 break;
             }
             case R.id.actionToggleHighlight: {
-                if (mChart.isHighlightEnabled())
-                    mChart.setHighlightEnabled(false);
-                else
-                    mChart.setHighlightEnabled(true);
-                mChart.invalidate();
+                if(mChart.getData() != null) {
+                    mChart.getData().setHighlightEnabled(!mChart.getData().isHighlightEnabled());
+                    mChart.invalidate();
+                }
                 break;
             }
             case R.id.actionToggleHighlightArrow: {
@@ -147,12 +147,6 @@ public class BarChartActivityMultiDataset extends DemoBase implements OnSeekBarC
                     mChart.setDrawHighlightArrow(false);
                 else
                     mChart.setDrawHighlightArrow(true);
-                mChart.invalidate();
-                break;
-            }
-            case R.id.actionToggleStartzero: {
-                mChart.getAxisLeft().setStartAtZero(!mChart.getAxisLeft().isStartAtZeroEnabled());
-                mChart.getAxisRight().setStartAtZero(!mChart.getAxisRight().isStartAtZeroEnabled());
                 mChart.invalidate();
                 break;
             }
@@ -220,7 +214,7 @@ public class BarChartActivityMultiDataset extends DemoBase implements OnSeekBarC
         BarDataSet set3 = new BarDataSet(yVals3, "Company C");
         set3.setColor(Color.rgb(242, 247, 158));
 
-        ArrayList<BarDataSet> dataSets = new ArrayList<BarDataSet>();
+        ArrayList<IBarDataSet> dataSets = new ArrayList<IBarDataSet>();
         dataSets.add(set1);
         dataSets.add(set2);
         dataSets.add(set3);

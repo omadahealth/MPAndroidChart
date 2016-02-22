@@ -1,6 +1,7 @@
 
 package com.xxmassdeveloper.mpchartexample;
 
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,18 +18,19 @@ import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.Legend.LegendPosition;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
-import com.github.mikephil.charting.data.DataSet;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.ScatterData;
 import com.github.mikephil.charting.data.ScatterDataSet;
 import com.github.mikephil.charting.data.filter.Approximator;
 import com.github.mikephil.charting.data.filter.Approximator.ApproximatorType;
+import com.github.mikephil.charting.highlight.Highlight;
+import com.github.mikephil.charting.interfaces.datasets.IScatterDataSet;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.ColorTemplate;
-import com.github.mikephil.charting.highlight.Highlight;
 import com.xxmassdeveloper.mpchartexample.notimportant.DemoBase;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class ScatterChartActivity extends DemoBase implements OnSeekBarChangeListener,
         OnChartValueSelectedListener {
@@ -65,7 +67,6 @@ public class ScatterChartActivity extends DemoBase implements OnSeekBarChangeLis
         mChart.setDrawGridBackground(false);
 
         mChart.setTouchEnabled(true);
-        mChart.setHighlightEnabled(true);
 
         // enable scaling and dragging
         mChart.setDragEnabled(true);
@@ -83,6 +84,7 @@ public class ScatterChartActivity extends DemoBase implements OnSeekBarChangeLis
 
         YAxis yl = mChart.getAxisLeft();
         yl.setTypeface(tf);
+        yl.setAxisMinValue(0f); // this replaces setStartAtZero(true)
         
         mChart.getAxisRight().setEnabled(false);
 
@@ -102,18 +104,23 @@ public class ScatterChartActivity extends DemoBase implements OnSeekBarChangeLis
 
         switch (item.getItemId()) {
             case R.id.actionToggleValues: {
-                for (DataSet<?> set : mChart.getData().getDataSets())
+                List<IScatterDataSet> sets = mChart.getData()
+                        .getDataSets();
+
+                for (IScatterDataSet iSet : sets) {
+
+                    ScatterDataSet set = (ScatterDataSet) iSet;
                     set.setDrawValues(!set.isDrawValuesEnabled());
+                }
 
                 mChart.invalidate();
                 break;
             }
             case R.id.actionToggleHighlight: {
-                if (mChart.isHighlightEnabled())
-                    mChart.setHighlightEnabled(false);
-                else
-                    mChart.setHighlightEnabled(true);
-                mChart.invalidate();
+                if(mChart.getData() != null) {
+                    mChart.getData().setHighlightEnabled(!mChart.getData().isHighlightEnabled());
+                    mChart.invalidate();
+                }
                 break;
             }
             case R.id.actionTogglePinch: {
@@ -128,24 +135,6 @@ public class ScatterChartActivity extends DemoBase implements OnSeekBarChangeLis
             case R.id.actionToggleAutoScaleMinMax: {
                 mChart.setAutoScaleMinMaxEnabled(!mChart.isAutoScaleMinMaxEnabled());
                 mChart.notifyDataSetChanged();
-                break;
-            }
-            case R.id.actionToggleStartzero: {
-                mChart.getAxisLeft().setStartAtZero(!mChart.getAxisLeft().isStartAtZeroEnabled());
-                mChart.getAxisRight().setStartAtZero(!mChart.getAxisRight().isStartAtZeroEnabled());
-                mChart.invalidate();
-                break;
-            }
-            case R.id.actionToggleFilter: {
-
-                Approximator a = new Approximator(ApproximatorType.DOUGLAS_PEUCKER, 25);
-
-                if (!mChart.isFilteringEnabled()) {
-                    mChart.enableFiltering(a);
-                } else {
-                    mChart.disableFiltering();
-                }
-                mChart.invalidate();
                 break;
             }
             case R.id.actionSave: {
@@ -206,6 +195,8 @@ public class ScatterChartActivity extends DemoBase implements OnSeekBarChangeLis
         set1.setColor(ColorTemplate.COLORFUL_COLORS[0]);
         ScatterDataSet set2 = new ScatterDataSet(yVals2, "DS 2");
         set2.setScatterShape(ScatterShape.CIRCLE);
+        set2.setScatterShapeHoleColor(Color.WHITE);
+        set2.setScatterShapeHoleRadius(5f);
         set2.setColor(ColorTemplate.COLORFUL_COLORS[1]);
         ScatterDataSet set3 = new ScatterDataSet(yVals3, "DS 3");
         set3.setScatterShape(ScatterShape.CROSS);
@@ -215,7 +206,7 @@ public class ScatterChartActivity extends DemoBase implements OnSeekBarChangeLis
         set2.setScatterShapeSize(8f);
         set3.setScatterShapeSize(8f);
 
-        ArrayList<ScatterDataSet> dataSets = new ArrayList<ScatterDataSet>();
+        ArrayList<IScatterDataSet> dataSets = new ArrayList<IScatterDataSet>();
         dataSets.add(set1); // add the datasets
         dataSets.add(set2);
         dataSets.add(set3);

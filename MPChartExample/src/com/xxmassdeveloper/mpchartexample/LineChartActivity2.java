@@ -20,19 +20,19 @@ import com.github.mikephil.charting.components.Legend.LegendPosition;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.components.YAxis.AxisDependency;
-import com.github.mikephil.charting.data.DataSet;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.data.filter.Approximator;
 import com.github.mikephil.charting.data.filter.Approximator.ApproximatorType;
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.github.mikephil.charting.highlight.Highlight;
-import com.xxmassdeveloper.mpchartexample.custom.MyFillFormatter;
 import com.xxmassdeveloper.mpchartexample.notimportant.DemoBase;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class LineChartActivity2 extends DemoBase implements OnSeekBarChangeListener,
         OnChartValueSelectedListener {
@@ -65,9 +65,6 @@ public class LineChartActivity2 extends DemoBase implements OnSeekBarChangeListe
         // no description text
         mChart.setDescription("");
         mChart.setNoDataTextDescription("You need to provide data for the chart.");
-
-        // enable value highlighting
-        mChart.setHighlightEnabled(true);
 
         // enable touch gestures
         mChart.setTouchEnabled(true);
@@ -117,15 +114,16 @@ public class LineChartActivity2 extends DemoBase implements OnSeekBarChangeListe
         leftAxis.setTypeface(tf);
         leftAxis.setTextColor(ColorTemplate.getHoloBlue());
         leftAxis.setAxisMaxValue(200f);
+        leftAxis.setAxisMinValue(0f);
         leftAxis.setDrawGridLines(true);
         
         YAxis rightAxis = mChart.getAxisRight();
         rightAxis.setTypeface(tf);
         rightAxis.setTextColor(Color.RED);
         rightAxis.setAxisMaxValue(900);
-        rightAxis.setStartAtZero(false);
         rightAxis.setAxisMinValue(-200);
         rightAxis.setDrawGridLines(false);
+        rightAxis.setDrawZeroLine(false);
     }
 
     @Override
@@ -139,26 +137,33 @@ public class LineChartActivity2 extends DemoBase implements OnSeekBarChangeListe
 
         switch (item.getItemId()) {
             case R.id.actionToggleValues: {
-                for (DataSet<?> set : mChart.getData().getDataSets())
+                List<ILineDataSet> sets = mChart.getData()
+                        .getDataSets();
+
+                for (ILineDataSet iSet : sets) {
+
+                    LineDataSet set = (LineDataSet) iSet;
                     set.setDrawValues(!set.isDrawValuesEnabled());
+                }
 
                 mChart.invalidate();
                 break;
             }
             case R.id.actionToggleHighlight: {
-                if (mChart.isHighlightEnabled())
-                    mChart.setHighlightEnabled(false);
-                else
-                    mChart.setHighlightEnabled(true);
-                mChart.invalidate();
+                if(mChart.getData() != null) {
+                    mChart.getData().setHighlightEnabled(!mChart.getData().isHighlightEnabled());
+                    mChart.invalidate();
+                }
                 break;
             }
             case R.id.actionToggleFilled: {
 
-                ArrayList<LineDataSet> sets = (ArrayList<LineDataSet>) mChart.getData()
+                List<ILineDataSet> sets = mChart.getData()
                         .getDataSets();
 
-                for (LineDataSet set : sets) {
+                for (ILineDataSet iSet : sets) {
+
+                    LineDataSet set = (LineDataSet) iSet;
                     if (set.isDrawFilledEnabled())
                         set.setDrawFilled(false);
                     else
@@ -168,10 +173,12 @@ public class LineChartActivity2 extends DemoBase implements OnSeekBarChangeListe
                 break;
             }
             case R.id.actionToggleCircles: {
-                ArrayList<LineDataSet> sets = (ArrayList<LineDataSet>) mChart.getData()
+                List<ILineDataSet> sets = mChart.getData()
                         .getDataSets();
 
-                for (LineDataSet set : sets) {
+                for (ILineDataSet iSet : sets) {
+
+                    LineDataSet set = (LineDataSet) iSet;
                     if (set.isDrawCirclesEnabled())
                         set.setDrawCircles(false);
                     else
@@ -181,21 +188,17 @@ public class LineChartActivity2 extends DemoBase implements OnSeekBarChangeListe
                 break;
             }
             case R.id.actionToggleCubic: {
-                ArrayList<LineDataSet> sets = (ArrayList<LineDataSet>) mChart.getData()
+                List<ILineDataSet> sets = mChart.getData()
                         .getDataSets();
 
-                for (LineDataSet set : sets) {
+                for (ILineDataSet iSet : sets) {
+
+                    LineDataSet set = (LineDataSet) iSet;
                     if (set.isDrawCubicEnabled())
                         set.setDrawCubic(false);
                     else
                         set.setDrawCubic(true);
                 }
-                mChart.invalidate();
-                break;
-            }
-            case R.id.actionToggleStartzero: {
-                mChart.getAxisLeft().setStartAtZero(!mChart.getAxisLeft().isStartAtZeroEnabled());
-                mChart.getAxisRight().setStartAtZero(!mChart.getAxisRight().isStartAtZeroEnabled());
                 mChart.invalidate();
                 break;
             }
@@ -223,19 +226,6 @@ public class LineChartActivity2 extends DemoBase implements OnSeekBarChangeListe
             }
             case R.id.animateXY: {
                 mChart.animateXY(3000, 3000);
-                break;
-            }
-            case R.id.actionToggleFilter: {
-
-                // the angle of filtering is 35°
-                Approximator a = new Approximator(ApproximatorType.DOUGLAS_PEUCKER, 35);
-
-                if (!mChart.isFilteringEnabled()) {
-                    mChart.enableFiltering(a);
-                } else {
-                    mChart.disableFiltering();
-                }
-                mChart.invalidate();
                 break;
             }
             case R.id.actionSave: {
@@ -288,7 +278,7 @@ public class LineChartActivity2 extends DemoBase implements OnSeekBarChangeListe
         set1.setColor(ColorTemplate.getHoloBlue());
         set1.setCircleColor(Color.WHITE);
         set1.setLineWidth(2f);
-        set1.setCircleSize(3f);
+        set1.setCircleRadius(3f);
         set1.setFillAlpha(65);
         set1.setFillColor(ColorTemplate.getHoloBlue());
         set1.setHighLightColor(Color.rgb(244, 117, 117));
@@ -314,14 +304,14 @@ public class LineChartActivity2 extends DemoBase implements OnSeekBarChangeListe
         set2.setColor(Color.RED);
         set2.setCircleColor(Color.WHITE);
         set2.setLineWidth(2f);
-        set2.setCircleSize(3f);
+        set2.setCircleRadius(3f);
         set2.setFillAlpha(65);
         set2.setFillColor(Color.RED);
         set2.setDrawCircleHole(false);
         set2.setHighLightColor(Color.rgb(244, 117, 117));
         //set2.setFillFormatter(new MyFillFormatter(900f));
 
-        ArrayList<LineDataSet> dataSets = new ArrayList<LineDataSet>();
+        ArrayList<ILineDataSet> dataSets = new ArrayList<ILineDataSet>();
         dataSets.add(set2);
         dataSets.add(set1); // add the datasets
 

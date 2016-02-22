@@ -6,19 +6,18 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
+import android.graphics.drawable.Drawable;
 
 import com.github.mikephil.charting.animation.ChartAnimator;
 import com.github.mikephil.charting.charts.RadarChart;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.RadarData;
-import com.github.mikephil.charting.data.RadarDataSet;
 import com.github.mikephil.charting.highlight.Highlight;
+import com.github.mikephil.charting.interfaces.datasets.IRadarDataSet;
 import com.github.mikephil.charting.utils.Utils;
 import com.github.mikephil.charting.utils.ViewPortHandler;
 
-import java.util.List;
-
-public class RadarChartRenderer extends LineScatterCandleRadarRenderer {
+public class RadarChartRenderer extends LineRadarRenderer {
 
     protected RadarChart mChart;
 
@@ -56,14 +55,17 @@ public class RadarChartRenderer extends LineScatterCandleRadarRenderer {
 
         RadarData radarData = mChart.getData();
 
-        for (RadarDataSet set : radarData.getDataSets()) {
+        for (IRadarDataSet set : radarData.getDataSets()) {
 
             if (set.isVisible() && set.getEntryCount() > 0)
                 drawDataSet(c, set);
         }
     }
 
-    protected void drawDataSet(Canvas c, RadarDataSet dataSet) {
+    protected void drawDataSet(Canvas c, IRadarDataSet dataSet) {
+
+        float phaseX = mAnimator.getPhaseX();
+        float phaseY = mAnimator.getPhaseY();
 
         float sliceangle = mChart.getSliceAngle();
 
@@ -73,20 +75,20 @@ public class RadarChartRenderer extends LineScatterCandleRadarRenderer {
 
         PointF center = mChart.getCenterOffsets();
 
-        List<Entry> entries = dataSet.getYVals();
-
         Path surface = new Path();
 
         boolean hasMovedToPoint = false;
 
-        for (int j = 0; j < entries.size(); j++) {
+        for (int j = 0; j < dataSet.getEntryCount(); j++) {
 
             mRenderPaint.setColor(dataSet.getColor(j));
 
-            Entry e = entries.get(j);
+            Entry e = dataSet.getEntryForIndex(j);
 
-            PointF p = Utils.getPosition(center, (e.getVal() - mChart.getYChartMin()) * factor,
-                    sliceangle * j + mChart.getRotationAngle());
+            PointF p = Utils.getPosition(
+                    center,
+                    (e.getVal() - mChart.getYChartMin()) * factor * phaseY,
+                    sliceangle * j * phaseX + mChart.getRotationAngle());
 
             if (Float.isNaN(p.x))
                 continue;
@@ -100,12 +102,13 @@ public class RadarChartRenderer extends LineScatterCandleRadarRenderer {
 
         surface.close();
 
-        // draw filled
-        if (dataSet.isDrawFilledEnabled()) {
-            mRenderPaint.setStyle(Paint.Style.FILL);
-            mRenderPaint.setAlpha(dataSet.getFillAlpha());
-            c.drawPath(surface, mRenderPaint);
-            mRenderPaint.setAlpha(255);
+        final Drawable drawable = dataSet.getFillDrawable();
+        if (drawable != null) {
+
+            drawFilledPath(c, surface, drawable);
+        } else {
+
+            drawFilledPath(c, surface, dataSet.getFillColor(), dataSet.getFillAlpha());
         }
 
         mRenderPaint.setStrokeWidth(dataSet.getLineWidth());
@@ -114,10 +117,21 @@ public class RadarChartRenderer extends LineScatterCandleRadarRenderer {
         // draw the line (only if filled is disabled or alpha is below 255)
         if (!dataSet.isDrawFilledEnabled() || dataSet.getFillAlpha() < 255)
             c.drawPath(surface, mRenderPaint);
+//
+//        // draw filled
+//        if (dataSet.isDrawFilledEnabled()) {
+//            mRenderPaint.setStyle(Paint.Style.FILL);
+//            mRenderPaint.setAlpha(dataSet.getFillAlpha());
+//            c.drawPath(surface, mRenderPaint);
+//            mRenderPaint.setAlpha(255);
+//        }
     }
 
     @Override
     public void drawValues(Canvas c) {
+
+        float phaseX = mAnimator.getPhaseX();
+        float phaseY = mAnimator.getPhaseY();
 
         float sliceangle = mChart.getSliceAngle();
 
@@ -131,7 +145,7 @@ public class RadarChartRenderer extends LineScatterCandleRadarRenderer {
 
         for (int i = 0; i < mChart.getData().getDataSetCount(); i++) {
 
-            RadarDataSet dataSet = mChart.getData().getDataSetByIndex(i);
+            IRadarDataSet dataSet = mChart.getData().getDataSetByIndex(i);
 
             if (!dataSet.isDrawValuesEnabled() || dataSet.getEntryCount() == 0)
                 continue;
@@ -139,16 +153,16 @@ public class RadarChartRenderer extends LineScatterCandleRadarRenderer {
             // apply the text-styling defined by the DataSet
             applyValueTextStyle(dataSet);
 
-            List<Entry> entries = dataSet.getYVals();
+            for (int j = 0; j < dataSet.getEntryCount(); j++) {
 
-            for (int j = 0; j < entries.size(); j++) {
+                Entry entry = dataSet.getEntryForIndex(j);
 
-                Entry entry = entries.get(j);
+                PointF p = Utils.getPosition(
+                        center,
+                        (entry.getVal() - mChart.getYChartMin()) * factor * phaseY,
+                        sliceangle * j * phaseX + mChart.getRotationAngle());
 
-                PointF p = Utils.getPosition(center, (entry.getVal() - mChart.getYChartMin()) * factor,
-                        sliceangle * j + mChart.getRotationAngle());
-
-                drawValue(c, dataSet.getValueFormatter(), entry.getVal(), entry, i, p.x, p.y - yoffset);
+                drawValue(c, dataSet.getValueFormatter(), entry.getVal(), entry, i, p.x, p.y - yoffset, dataSet.getValueTextColor(j));
             }
         }
     }
@@ -174,10 +188,14 @@ public class RadarChartRenderer extends LineScatterCandleRadarRenderer {
         mWebPaint.setColor(mChart.getWebColor());
         mWebPaint.setAlpha(mChart.getWebAlpha());
 
-        for (int i = 0; i < mChart.getData().getXValCount(); i += mChart.getSkipWebLineCount()) {
+        final int xIncrements = 1 + mChart.getSkipWebLineCount();
 
-            PointF p = Utils.getPosition(center, mChart.getYRange() * factor, sliceangle * i
-                    + rotationangle);
+        for (int i = 0; i < mChart.getData().getXValCount(); i += xIncrements) {
+
+            PointF p = Utils.getPosition(
+                    center,
+                    mChart.getYRange() * factor,
+                    sliceangle * i + rotationangle);
 
             c.drawLine(center.x, center.y, p.x, p.y, mWebPaint);
         }
@@ -206,6 +224,9 @@ public class RadarChartRenderer extends LineScatterCandleRadarRenderer {
     @Override
     public void drawHighlighted(Canvas c, Highlight[] indices) {
 
+        float phaseX = mAnimator.getPhaseX();
+        float phaseY = mAnimator.getPhaseY();
+
         float sliceangle = mChart.getSliceAngle();
         float factor = mChart.getFactor();
 
@@ -213,7 +234,7 @@ public class RadarChartRenderer extends LineScatterCandleRadarRenderer {
 
         for (int i = 0; i < indices.length; i++) {
 
-            RadarDataSet set = mChart.getData()
+            IRadarDataSet set = mChart.getData()
                     .getDataSetByIndex(indices[i]
                             .getDataSetIndex());
 
@@ -227,14 +248,16 @@ public class RadarChartRenderer extends LineScatterCandleRadarRenderer {
             if (e == null || e.getXIndex() != xIndex)
                 continue;
 
-            int j = set.getEntryPosition(e);
+            int j = set.getEntryIndex(e);
             float y = (e.getVal() - mChart.getYChartMin());
 
             if (Float.isNaN(y))
                 continue;
 
-            PointF p = Utils.getPosition(center, y * factor,
-                    sliceangle * j + mChart.getRotationAngle());
+            PointF p = Utils.getPosition(
+                    center,
+                    y * factor * phaseY,
+                    sliceangle * j * phaseX + mChart.getRotationAngle());
 
             float[] pts = new float[]{
                     p.x, p.y

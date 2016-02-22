@@ -3,6 +3,7 @@ package com.github.mikephil.charting.components;
 
 import com.github.mikephil.charting.formatter.DefaultXAxisValueFormatter;
 import com.github.mikephil.charting.formatter.XAxisValueFormatter;
+import com.github.mikephil.charting.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,16 +21,33 @@ public class XAxis extends AxisBase {
     protected List<String> mValues = new ArrayList<String>();
 
     /**
-     * width of the x-axis labels in pixels - this is calculated by the
-     * calcTextWidth() method of the utils
+     * width of the x-axis labels in pixels - this is automatically
+     * calculated by the computeAxis() methods in the renderers
      */
     public int mLabelWidth = 1;
 
     /**
-     * height of the x-axis labels in pixels - this is calculated by the
-     * calcTextHeight() method of the utils
+     * height of the x-axis labels in pixels - this is automatically
+     * calculated by the computeAxis() methods in the renderers
      */
     public int mLabelHeight = 1;
+
+    /**
+     * width of the (rotated) x-axis labels in pixels - this is automatically
+     * calculated by the computeAxis() methods in the renderers
+     */
+    public int mLabelRotatedWidth = 1;
+
+    /**
+     * height of the (rotated) x-axis labels in pixels - this is automatically
+     * calculated by the computeAxis() methods in the renderers
+     */
+    public int mLabelRotatedHeight = 1;
+
+    /**
+     * This is the angle for drawing the X axis labels (in degrees)
+     */
+    protected float mLabelRotationAngle = 0f;
 
     /**
      * the space that should be left out (in characters) between the x-axis
@@ -49,14 +67,6 @@ public class XAxis extends AxisBase {
      * it's auto, if true, then custom. default: false (automatic modulus)
      */
     private boolean mIsAxisModulusCustom = false;
-
-    /**
-     * the modulus that indicates if a value at a specified index in an
-     * array(list) for the y-axis-labels is drawn or not. If index % modulus ==
-     * 0 DRAW, else dont draw. THIS IS ONLY FOR HORIZONTAL BARCHART.
-     */
-    public int mYAxisLabelModulus = 1;
-
     /**
      * if set to true, the chart will avoid that the first and last label entry
      * in the chart "clip" off the edge of the chart
@@ -78,6 +88,8 @@ public class XAxis extends AxisBase {
 
     public XAxis() {
         super();
+
+        mYOffset = Utils.convertDpToPixel(4.f); // -3
     }
 
     /**
@@ -94,6 +106,22 @@ public class XAxis extends AxisBase {
      */
     public void setPosition(XAxisPosition pos) {
         mPosition = pos;
+    }
+
+    /**
+     * returns the angle for drawing the X axis labels (in degrees)
+     */
+    public float getLabelRotationAngle() {
+        return mLabelRotationAngle;
+    }
+
+    /**
+     * sets the angle for drawing the X axis labels (in degrees)
+     *
+     * @param angle the angle in degrees
+     */
+    public void setLabelRotationAngle(float angle) {
+        mLabelRotationAngle = angle;
     }
 
     /**

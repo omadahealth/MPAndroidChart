@@ -7,11 +7,10 @@ import android.graphics.Paint.Style;
 
 import com.github.mikephil.charting.animation.ChartAnimator;
 import com.github.mikephil.charting.data.BubbleData;
-import com.github.mikephil.charting.data.BubbleDataSet;
 import com.github.mikephil.charting.data.BubbleEntry;
-import com.github.mikephil.charting.data.Entry;
-import com.github.mikephil.charting.interfaces.BubbleDataProvider;
 import com.github.mikephil.charting.highlight.Highlight;
+import com.github.mikephil.charting.interfaces.dataprovider.BubbleDataProvider;
+import com.github.mikephil.charting.interfaces.datasets.IBubbleDataSet;
 import com.github.mikephil.charting.utils.Transformer;
 import com.github.mikephil.charting.utils.Utils;
 import com.github.mikephil.charting.utils.ViewPortHandler;
@@ -27,7 +26,7 @@ public class BubbleChartRenderer extends DataRenderer {
     protected BubbleDataProvider mChart;
 
     public BubbleChartRenderer(BubbleDataProvider chart, ChartAnimator animator,
-            ViewPortHandler viewPortHandler) {
+                               ViewPortHandler viewPortHandler) {
         super(animator, viewPortHandler);
         mChart = chart;
 
@@ -47,7 +46,7 @@ public class BubbleChartRenderer extends DataRenderer {
 
         BubbleData bubbleData = mChart.getBubbleData();
 
-        for (BubbleDataSet set : bubbleData.getDataSets()) {
+        for (IBubbleDataSet set : bubbleData.getDataSets()) {
 
             if (set.isVisible() && set.getEntryCount() > 0)
                 drawDataSet(c, set);
@@ -63,20 +62,18 @@ public class BubbleChartRenderer extends DataRenderer {
         return shapeSize;
     }
 
-    protected void drawDataSet(Canvas c, BubbleDataSet dataSet) {
+    protected void drawDataSet(Canvas c, IBubbleDataSet dataSet) {
 
         Transformer trans = mChart.getTransformer(dataSet.getAxisDependency());
 
         float phaseX = mAnimator.getPhaseX();
         float phaseY = mAnimator.getPhaseY();
 
-        List<BubbleEntry> entries = dataSet.getYVals();
+        BubbleEntry entryFrom = dataSet.getEntryForXIndex(mMinX);
+        BubbleEntry entryTo = dataSet.getEntryForXIndex(mMaxX);
 
-        Entry entryFrom = dataSet.getEntryForXIndex(mMinX);
-        Entry entryTo = dataSet.getEntryForXIndex(mMaxX);
-
-        int minx = Math.max(dataSet.getEntryPosition(entryFrom), 0);
-        int maxx = Math.min(dataSet.getEntryPosition(entryTo) + 1, entries.size());
+        int minx = Math.max(dataSet.getEntryIndex(entryFrom), 0);
+        int maxx = Math.min(dataSet.getEntryIndex(entryTo) + 1, dataSet.getEntryCount());
 
         sizeBuffer[0] = 0f;
         sizeBuffer[2] = 1f;
@@ -90,7 +87,7 @@ public class BubbleChartRenderer extends DataRenderer {
 
         for (int j = minx; j < maxx; j++) {
 
-            final BubbleEntry entry = entries.get(j);
+            final BubbleEntry entry = dataSet.getEntryForIndex(j);
 
             pointBuffer[0] = (float) (entry.getXIndex() - minx) * phaseX + (float) minx;
             pointBuffer[1] = (float) (entry.getVal()) * phaseY;
@@ -127,13 +124,13 @@ public class BubbleChartRenderer extends DataRenderer {
         if (bubbleData.getYValCount() < (int) (Math.ceil((float) (mChart.getMaxVisibleCount())
                 * mViewPortHandler.getScaleX()))) {
 
-            final List<BubbleDataSet> dataSets = bubbleData.getDataSets();
+            final List<IBubbleDataSet> dataSets = bubbleData.getDataSets();
 
             float lineHeight = Utils.calcTextHeight(mValuePaint, "1");
 
             for (int i = 0; i < dataSets.size(); i++) {
 
-                BubbleDataSet dataSet = dataSets.get(i);
+                IBubbleDataSet dataSet = dataSets.get(i);
 
                 if (!dataSet.isDrawValuesEnabled() || dataSet.getEntryCount() == 0)
                     continue;
@@ -144,25 +141,22 @@ public class BubbleChartRenderer extends DataRenderer {
                 final float phaseX = mAnimator.getPhaseX();
                 final float phaseY = mAnimator.getPhaseY();
 
-                final float alpha = phaseX == 1 ? phaseY : phaseX;
-                int valueTextColor = dataSet.getValueTextColor();
-                valueTextColor = Color.argb(Math.round(255.f * alpha), Color.red(valueTextColor),
-                        Color.green(valueTextColor), Color.blue(valueTextColor));
+                BubbleEntry entryFrom = dataSet.getEntryForXIndex(mMinX);
+                BubbleEntry entryTo = dataSet.getEntryForXIndex(mMaxX);
 
-                mValuePaint.setColor(valueTextColor);
-
-                final List<BubbleEntry> entries = dataSet.getYVals();
-
-                Entry entryFrom = dataSet.getEntryForXIndex(mMinX);
-                Entry entryTo = dataSet.getEntryForXIndex(mMaxX);
-
-                int minx = dataSet.getEntryPosition(entryFrom);
-                int maxx = Math.min(dataSet.getEntryPosition(entryTo) + 1, dataSet.getEntryCount());
+                int minx = dataSet.getEntryIndex(entryFrom);
+                int maxx = Math.min(dataSet.getEntryIndex(entryTo) + 1, dataSet.getEntryCount());
 
                 final float[] positions = mChart.getTransformer(dataSet.getAxisDependency())
-                        .generateTransformedValuesBubble(entries, phaseX, phaseY, minx, maxx);
+                        .generateTransformedValuesBubble(dataSet, phaseX, phaseY, minx, maxx);
+
+                final float alpha = phaseX == 1 ? phaseY : phaseX;
 
                 for (int j = 0; j < positions.length; j += 2) {
+
+                    int valueTextColor = dataSet.getValueTextColor(j / 2 + minx);
+                    valueTextColor = Color.argb(Math.round(255.f * alpha), Color.red(valueTextColor),
+                            Color.green(valueTextColor), Color.blue(valueTextColor));
 
                     float x = positions[j];
                     float y = positions[j + 1];
@@ -173,14 +167,13 @@ public class BubbleChartRenderer extends DataRenderer {
                     if ((!mViewPortHandler.isInBoundsLeft(x) || !mViewPortHandler.isInBoundsY(y)))
                         continue;
 
-                    BubbleEntry entry = entries.get(j / 2 + minx);
+                    BubbleEntry entry = dataSet.getEntryForIndex(j / 2 + minx);
 
                     drawValue(c, dataSet.getValueFormatter(), entry.getSize(), entry, i, x,
-                            y + (0.5f * lineHeight));
+                            y + (0.5f * lineHeight), valueTextColor);
                 }
             }
         }
-
     }
 
     @Override
@@ -199,28 +192,28 @@ public class BubbleChartRenderer extends DataRenderer {
 
         for (Highlight indice : indices) {
 
-            BubbleDataSet dataSet = bubbleData.getDataSetByIndex(indice.getDataSetIndex());
+            IBubbleDataSet dataSet = bubbleData.getDataSetByIndex(indice.getDataSetIndex());
 
             if (dataSet == null || !dataSet.isHighlightEnabled())
                 continue;
 
-            Entry entryFrom = dataSet.getEntryForXIndex(mMinX);
-            Entry entryTo = dataSet.getEntryForXIndex(mMaxX);
+            BubbleEntry entryFrom = dataSet.getEntryForXIndex(mMinX);
+            BubbleEntry entryTo = dataSet.getEntryForXIndex(mMaxX);
 
-            int minx = dataSet.getEntryPosition(entryFrom);
-            int maxx = Math.min(dataSet.getEntryPosition(entryTo) + 1, dataSet.getEntryCount());
+            int minx = dataSet.getEntryIndex(entryFrom);
+            int maxx = Math.min(dataSet.getEntryIndex(entryTo) + 1, dataSet.getEntryCount());
 
             final BubbleEntry entry = (BubbleEntry) bubbleData.getEntryForHighlight(indice);
             if (entry == null || entry.getXIndex() != indice.getXIndex())
                 continue;
 
             Transformer trans = mChart.getTransformer(dataSet.getAxisDependency());
-            
+
             sizeBuffer[0] = 0f;
             sizeBuffer[2] = 1f;
 
             trans.pointValuesToPixel(sizeBuffer);
-            
+
             // calcualte the full width of 1 step on the x-axis
             final float maxBubbleWidth = Math.abs(sizeBuffer[2] - sizeBuffer[0]);
             final float maxBubbleHeight = Math.abs(mViewPortHandler.contentBottom() - mViewPortHandler.contentTop());

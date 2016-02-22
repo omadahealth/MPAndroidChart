@@ -22,12 +22,12 @@ import com.github.mikephil.charting.data.CandleData;
 import com.github.mikephil.charting.data.CandleDataSet;
 import com.github.mikephil.charting.data.CandleEntry;
 import com.github.mikephil.charting.data.CombinedData;
-import com.github.mikephil.charting.data.DataSet;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.data.ScatterData;
 import com.github.mikephil.charting.data.ScatterDataSet;
+import com.github.mikephil.charting.interfaces.datasets.IDataSet;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.xxmassdeveloper.mpchartexample.notimportant.DemoBase;
 
@@ -58,9 +58,11 @@ public class CombinedChartActivity extends DemoBase {
 
         YAxis rightAxis = mChart.getAxisRight();
         rightAxis.setDrawGridLines(false);
+        rightAxis.setAxisMinValue(0f); // this replaces setStartAtZero(true)
 
         YAxis leftAxis = mChart.getAxisLeft();
         leftAxis.setDrawGridLines(false);
+        leftAxis.setAxisMinValue(0f); // this replaces setStartAtZero(true)
 
         XAxis xAxis = mChart.getXAxisBottom();
         xAxis.setPosition(XAxisPosition.BOTH_SIDED);
@@ -90,7 +92,7 @@ public class CombinedChartActivity extends DemoBase {
         set.setColor(Color.rgb(240, 238, 70));
         set.setLineWidth(2.5f);
         set.setCircleColor(Color.rgb(240, 238, 70));
-        set.setCircleSize(5f);
+        set.setCircleRadius(5f);
         set.setFillColor(Color.rgb(240, 238, 70));
         set.setDrawCubic(true);
         set.setDrawValues(true);
@@ -154,7 +156,7 @@ public class CombinedChartActivity extends DemoBase {
 
         CandleDataSet set = new CandleDataSet(entries, "Candle DataSet");
         set.setColor(Color.rgb(80, 80, 80));
-        set.setBodySpace(0.3f);
+        set.setBarSpace(0.3f);
         set.setValueTextSize(10f);
         set.setDrawValues(false);
         d.addDataSet(set);
@@ -198,7 +200,7 @@ public class CombinedChartActivity extends DemoBase {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.actionToggleLineValues: {
-                for (DataSet<?> set : mChart.getData().getDataSets()) {
+                for (IDataSet set : mChart.getData().getDataSets()) {
                     if (set instanceof LineDataSet)
                         set.setDrawValues(!set.isDrawValuesEnabled());
                 }
@@ -207,7 +209,7 @@ public class CombinedChartActivity extends DemoBase {
                 break;
             }
             case R.id.actionToggleBarValues: {
-                for (DataSet<?> set : mChart.getData().getDataSets()) {
+                for (IDataSet set : mChart.getData().getDataSets()) {
                     if (set instanceof BarDataSet)
                         set.setDrawValues(!set.isDrawValuesEnabled());
                 }

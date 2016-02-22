@@ -22,9 +22,9 @@ import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
-import com.github.mikephil.charting.data.DataSet;
 import com.github.mikephil.charting.data.filter.Approximator;
 import com.github.mikephil.charting.data.filter.Approximator.ApproximatorType;
+import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.github.mikephil.charting.utils.FileUtils;
 import com.xxmassdeveloper.mpchartexample.notimportant.DemoBase;
 
@@ -87,7 +87,6 @@ public class BarChartActivitySinus extends DemoBase implements OnSeekBarChangeLi
         YAxis leftAxis = mChart.getAxisLeft();
         leftAxis.setTypeface(mTf);
         leftAxis.setLabelCount(6, false);
-        leftAxis.setStartAtZero(false);
         leftAxis.setAxisMinValue(-2.5f);
         leftAxis.setAxisMaxValue(2.5f);
 
@@ -95,7 +94,6 @@ public class BarChartActivitySinus extends DemoBase implements OnSeekBarChangeLi
         rightAxis.setDrawGridLines(false);
         rightAxis.setTypeface(mTf);
         rightAxis.setLabelCount(6, false);
-        rightAxis.setStartAtZero(false);
         rightAxis.setAxisMinValue(-2.5f);
         rightAxis.setAxisMaxValue(2.5f);
 
@@ -123,18 +121,17 @@ public class BarChartActivitySinus extends DemoBase implements OnSeekBarChangeLi
 
         switch (item.getItemId()) {
             case R.id.actionToggleValues: {
-                for (DataSet<?> set : mChart.getData().getDataSets())
+                for (IBarDataSet set : mChart.getData().getDataSets())
                     set.setDrawValues(!set.isDrawValuesEnabled());
 
                 mChart.invalidate();
                 break;
             }
             case R.id.actionToggleHighlight: {
-                if (mChart.isHighlightEnabled())
-                    mChart.setHighlightEnabled(false);
-                else
-                    mChart.setHighlightEnabled(true);
-                mChart.invalidate();
+                if(mChart.getData() != null) {
+                    mChart.getData().setHighlightEnabled(!mChart.getData().isHighlightEnabled());
+                    mChart.invalidate();
+                }
                 break;
             }
             case R.id.actionTogglePinch: {
@@ -159,13 +156,6 @@ public class BarChartActivitySinus extends DemoBase implements OnSeekBarChangeLi
                 mChart.invalidate();
                 break;
             }
-            case R.id.actionToggleStartzero: {
-                mChart.getAxisLeft().setStartAtZero(!mChart.getAxisLeft().isStartAtZeroEnabled());
-                mChart.getAxisRight().setStartAtZero(!mChart.getAxisRight().isStartAtZeroEnabled());
-                mChart.notifyDataSetChanged();
-                mChart.invalidate();
-                break;
-            }
             case R.id.animateX: {
                 mChart.animateX(1500);
                 break;
@@ -177,18 +167,6 @@ public class BarChartActivitySinus extends DemoBase implements OnSeekBarChangeLi
             case R.id.animateXY: {
 
                 mChart.animateXY(2000, 2000);
-                break;
-            }
-            case R.id.actionToggleFilter: {
-
-                Approximator a = new Approximator(ApproximatorType.DOUGLAS_PEUCKER, 25);
-
-                if (!mChart.isFilteringEnabled()) {
-                    mChart.enableFiltering(a);
-                } else {
-                    mChart.disableFiltering();
-                }
-                mChart.invalidate();
                 break;
             }
             case R.id.actionSave: {

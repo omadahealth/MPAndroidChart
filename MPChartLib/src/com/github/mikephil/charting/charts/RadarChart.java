@@ -60,7 +60,7 @@ public class RadarChart extends PieRadarChartBase<RadarData> {
     /**
      * modulus that determines how many labels and web-lines are skipped before the next is drawn
      */
-    private int mWebModulus = 1;
+    private int mSkipWebLineCount = 0;
 
     /**
      * the object reprsenting the y-axis labels
@@ -113,7 +113,7 @@ public class RadarChart extends PieRadarChartBase<RadarData> {
         mXChartMax = mData.getXVals().size() - 1;
         mDeltaX = Math.abs(mXChartMax - mXChartMin);
 
-        float leftRange = Math.abs(maxLeft - (mYAxis.isStartAtZeroEnabled() ? 0 : minLeft));
+        float leftRange = Math.abs(maxLeft - minLeft);
 
         float topSpaceLeft = leftRange / 100f * mYAxis.getSpaceTop();
         float bottomSpaceLeft = leftRange / 100f * mYAxis.getSpaceBottom();
@@ -121,25 +121,9 @@ public class RadarChart extends PieRadarChartBase<RadarData> {
         mXChartMax = mData.getXVals().size() - 1;
         mDeltaX = Math.abs(mXChartMax - mXChartMin);
 
-        if (mYAxis.isStartAtZeroEnabled()) {
-            if (minLeft < 0.f && maxLeft < 0.f) {
-                // If the values are all negative, let's stay in the negative zone
-                mYAxis.mAxisMinimum = Math.min(0.f, !Float.isNaN(mYAxis.getAxisMinValue()) ? mYAxis.getAxisMinValue() : (minLeft - bottomSpaceLeft));
-                mYAxis.mAxisMaximum = 0.f;
-            } else if (minLeft >= 0.0) {
-                // We have positive values only, stay in the positive zone
-                mYAxis.mAxisMinimum = 0.f;
-                mYAxis.mAxisMaximum = Math.max(0.f, !Float.isNaN(mYAxis.getAxisMaxValue()) ? mYAxis.getAxisMaxValue() : (maxLeft + topSpaceLeft));
-            } else {
-                // Stick the minimum to 0.0 or less, and maximum to 0.0 or more (startAtZero for negative/positive at the same time)
-                mYAxis.mAxisMinimum = Math.min(0.f, !Float.isNaN(mYAxis.getAxisMinValue()) ? mYAxis.getAxisMinValue() : (minLeft - bottomSpaceLeft));
-                mYAxis.mAxisMaximum = Math.max(0.f, !Float.isNaN(mYAxis.getAxisMaxValue()) ? mYAxis.getAxisMaxValue() : (maxLeft + topSpaceLeft));
-            }
-        } else {
-            // Use the values as they are
-            mYAxis.mAxisMinimum = !Float.isNaN(mYAxis.getAxisMinValue()) ? mYAxis.getAxisMinValue() : (minLeft - bottomSpaceLeft);
-            mYAxis.mAxisMaximum = !Float.isNaN(mYAxis.getAxisMaxValue()) ? mYAxis.getAxisMaxValue() : (maxLeft + topSpaceLeft);
-        }
+        // Use the values as they are
+        mYAxis.mAxisMinimum = !Float.isNaN(mYAxis.getAxisMinValue()) ? mYAxis.getAxisMinValue() : (minLeft - bottomSpaceLeft);
+        mYAxis.mAxisMaximum = !Float.isNaN(mYAxis.getAxisMaxValue()) ? mYAxis.getAxisMaxValue() : (maxLeft + topSpaceLeft);
 
         mYAxis.mAxisRange = Math.abs(mYAxis.mAxisMaximum - mYAxis.mAxisMinimum);
     }
@@ -161,7 +145,7 @@ public class RadarChart extends PieRadarChartBase<RadarData> {
 
     @Override
     public void notifyDataSetChanged() {
-        if (mDataNotSet)
+        if (mData == null)
             return;
 
         calcMinMax();
@@ -171,7 +155,7 @@ public class RadarChart extends PieRadarChartBase<RadarData> {
 //        }
 
         mYAxisRenderer.computeAxis(mYAxis.mAxisMinimum, mYAxis.mAxisMaximum);
-        mXAxisRenderer.computeAxis(mData.getXValAverageLength(), mData.getXVals());
+        mXAxisRenderer.computeAxis(mData.getXValMaximumLength(), mData.getXVals());
 
         if (mLegend != null && !mLegend.isLegendCustom())
             mLegendRenderer.computeLegend(mData);
@@ -183,7 +167,7 @@ public class RadarChart extends PieRadarChartBase<RadarData> {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        if (mDataNotSet)
+        if (mData == null)
             return;
 
         mXAxisRenderer.renderAxisLabels(canvas);
@@ -196,7 +180,7 @@ public class RadarChart extends PieRadarChartBase<RadarData> {
         mRenderer.drawData(canvas);
 
         if (valuesToHighlight())
-            mRenderer.drawHighlighted(canvas, mIndicesToHightlight);
+            mRenderer.drawHighlighted(canvas, mIndicesToHighlight);
 
         mYAxisRenderer.renderAxisLabels(canvas);
 
@@ -358,10 +342,7 @@ public class RadarChart extends PieRadarChartBase<RadarData> {
      */
     public void setSkipWebLineCount(int count) {
 
-        if (count < 0)
-            count = 0;
-
-        mWebModulus = count + 1;
+        mSkipWebLineCount = Math.max(0, count);
     }
 
     /**
@@ -370,17 +351,19 @@ public class RadarChart extends PieRadarChartBase<RadarData> {
      * @return
      */
     public int getSkipWebLineCount() {
-        return mWebModulus;
+        return mSkipWebLineCount;
     }
 
     @Override
-    protected float getRequiredBottomOffset() {
+    protected float getRequiredLegendOffset() {
         return mLegendRenderer.getLabelPaint().getTextSize() * 4.f;
     }
 
     @Override
     protected float getRequiredBaseOffset() {
-        return mXAxis.isEnabled() && mXAxis.isDrawLabelsEnabled() ? mXAxis.mLabelWidth : Utils.convertDpToPixel(10f);
+        return mXAxis.isEnabled() && mXAxis.isDrawLabelsEnabled() ?
+                mXAxis.mLabelRotatedWidth :
+                Utils.convertDpToPixel(10f);
     }
 
     @Override

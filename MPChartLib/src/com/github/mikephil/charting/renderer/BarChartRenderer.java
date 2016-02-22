@@ -11,10 +11,10 @@ import android.graphics.RectF;
 import com.github.mikephil.charting.animation.ChartAnimator;
 import com.github.mikephil.charting.buffer.BarBuffer;
 import com.github.mikephil.charting.data.BarData;
-import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
-import com.github.mikephil.charting.interfaces.BarDataProvider;
 import com.github.mikephil.charting.highlight.Highlight;
+import com.github.mikephil.charting.interfaces.dataprovider.BarDataProvider;
+import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.github.mikephil.charting.utils.Transformer;
 import com.github.mikephil.charting.utils.Utils;
 import com.github.mikephil.charting.utils.ViewPortHandler;
@@ -54,8 +54,8 @@ public class BarChartRenderer extends DataRenderer {
         mBarBuffers = new BarBuffer[barData.getDataSetCount()];
 
         for (int i = 0; i < mBarBuffers.length; i++) {
-            BarDataSet set = barData.getDataSetByIndex(i);
-            mBarBuffers[i] = new BarBuffer(set.getValueCount() * 4 * set.getStackSize(),
+            IBarDataSet set = barData.getDataSetByIndex(i);
+            mBarBuffers[i] = new BarBuffer(set.getEntryCount() * 4 * (set.isStacked() ? set.getStackSize() : 1),
                     barData.getGroupSpace(),
                     barData.getDataSetCount(), set.isStacked());
         }
@@ -68,7 +68,7 @@ public class BarChartRenderer extends DataRenderer {
 
         for (int i = 0; i < barData.getDataSetCount(); i++) {
 
-            BarDataSet set = barData.getDataSetByIndex(i);
+            IBarDataSet set = barData.getDataSetByIndex(i);
 
             if (set.isVisible() && set.getEntryCount() > 0) {
                 drawDataSet(c, set, i);
@@ -76,7 +76,7 @@ public class BarChartRenderer extends DataRenderer {
         }
     }
 
-    protected void drawDataSet(Canvas c, BarDataSet dataSet, int index) {
+    protected void drawDataSet(Canvas c, IBarDataSet dataSet, int index) {
 
         Transformer trans = mChart.getTransformer(dataSet.getAxisDependency());
 
@@ -85,8 +85,6 @@ public class BarChartRenderer extends DataRenderer {
         float phaseX = mAnimator.getPhaseX();
         float phaseY = mAnimator.getPhaseY();
 
-        List<BarEntry> entries = dataSet.getYVals();
-
         // initialize the buffer
         BarBuffer buffer = mBarBuffers[index];
         buffer.setPhases(phaseX, phaseY);
@@ -94,7 +92,7 @@ public class BarChartRenderer extends DataRenderer {
         buffer.setDataSet(index);
         buffer.setInverted(mChart.isInverted(dataSet.getAxisDependency()));
 
-        buffer.feed(entries);
+        buffer.feed(dataSet);
 
         trans.pointValuesToPixel(buffer.buffer);
 
@@ -175,7 +173,7 @@ public class BarChartRenderer extends DataRenderer {
         // if values are drawn
         if (passesCheck()) {
 
-            List<BarDataSet> dataSets = mChart.getBarData().getDataSets();
+            List<IBarDataSet> dataSets = mChart.getBarData().getDataSets();
 
             final float valueOffsetPlus = Utils.convertDpToPixel(4.5f);
             float posOffset = 0f;
@@ -184,7 +182,7 @@ public class BarChartRenderer extends DataRenderer {
 
             for (int i = 0; i < mChart.getBarData().getDataSetCount(); i++) {
 
-                BarDataSet dataSet = dataSets.get(i);
+                IBarDataSet dataSet = dataSets.get(i);
 
                 if (!dataSet.isDrawValuesEnabled() || dataSet.getEntryCount() == 0)
                     continue;
@@ -207,9 +205,7 @@ public class BarChartRenderer extends DataRenderer {
 
                 Transformer trans = mChart.getTransformer(dataSet.getAxisDependency());
 
-                List<BarEntry> entries = dataSet.getYVals();
-
-                float[] valuePoints = getTransformedValues(trans, entries, i);
+                float[] valuePoints = getTransformedValues(trans, dataSet, i);
 
                 // if only single values are drawn (sum)
                 if (!dataSet.isStacked()) {
@@ -223,11 +219,11 @@ public class BarChartRenderer extends DataRenderer {
                                 || !mViewPortHandler.isInBoundsLeft(valuePoints[j]))
                             continue;
 
-                        BarEntry entry = entries.get(j / 2);
+                        BarEntry entry = dataSet.getEntryForIndex(j / 2);
                         float val = entry.getVal();
 
                         drawValue(c, dataSet.getValueFormatter(), val, entry, i, valuePoints[j],
-                                valuePoints[j + 1] + (val >= 0 ? posOffset : negOffset));
+                                valuePoints[j + 1] + (val >= 0 ? posOffset : negOffset), dataSet.getValueTextColor(j / 2));
                     }
 
                     // if we have stacks
@@ -235,7 +231,7 @@ public class BarChartRenderer extends DataRenderer {
 
                     for (int j = 0; j < (valuePoints.length - 1) * mAnimator.getPhaseX(); j += 2) {
 
-                        BarEntry entry = entries.get(j / 2);
+                        BarEntry entry = dataSet.getEntryForIndex(j / 2);
 
                         float[] vals = entry.getVals();
 
@@ -252,10 +248,12 @@ public class BarChartRenderer extends DataRenderer {
                                 continue;
 
                             drawValue(c, dataSet.getValueFormatter(), entry.getVal(), entry, i, valuePoints[j],
-                                    valuePoints[j + 1] + (entry.getVal() >= 0 ? posOffset : negOffset));
+                                    valuePoints[j + 1] + (entry.getVal() >= 0 ? posOffset : negOffset), dataSet.getValueTextColor(j / 2));
 
                             // draw stack values
                         } else {
+
+                            int color = dataSet.getValueTextColor(j / 2);
 
                             float[] transformed = new float[vals.length * 2];
 
@@ -293,7 +291,7 @@ public class BarChartRenderer extends DataRenderer {
                                         || !mViewPortHandler.isInBoundsLeft(x))
                                     continue;
 
-                                drawValue(c, dataSet.getValueFormatter(), vals[k / 2], entry, i, x, y);
+                                drawValue(c, dataSet.getValueFormatter(), vals[k / 2], entry, i, x, y, color);
                             }
                         }
                     }
@@ -313,7 +311,7 @@ public class BarChartRenderer extends DataRenderer {
             int index = h.getXIndex();
 
             int dataSetIndex = h.getDataSetIndex();
-            BarDataSet set = mChart.getBarData().getDataSetByIndex(dataSetIndex);
+            IBarDataSet set = mChart.getBarData().getDataSetByIndex(dataSetIndex);
 
             if (set == null || !set.isHighlightEnabled())
                 continue;
@@ -346,7 +344,7 @@ public class BarChartRenderer extends DataRenderer {
 
                 if (isStack) {
                     y1 = h.getRange().from;
-                    y2 = h.getRange().to * mAnimator.getPhaseY();
+                    y2 = h.getRange().to;
                 } else {
                     y1 = e.getVal();
                     y2 = 0.f;
@@ -370,7 +368,7 @@ public class BarChartRenderer extends DataRenderer {
                     final float arrowWidth = set.getBarSpace() / 2.f;
                     final float arrowHeight = arrowWidth * xToYRel;
 
-                    final float yArrow = y1 > -y2 ? y1 : y1;
+                    final float yArrow = (y1 > -y2 ? y1 : y1) * mAnimator.getPhaseY();
 
                     Path arrow = new Path();
                     arrow.moveTo(x + 0.4f, yArrow + offsetY);
@@ -384,9 +382,9 @@ public class BarChartRenderer extends DataRenderer {
         }
     }
 
-    public float[] getTransformedValues(Transformer trans, List<BarEntry> entries,
+    public float[] getTransformedValues(Transformer trans, IBarDataSet data,
             int dataSetIndex) {
-        return trans.generateTransformedValuesBarChart(entries, dataSetIndex,
+        return trans.generateTransformedValuesBarChart(data, dataSetIndex,
                 mChart.getBarData(),
                 mAnimator.getPhaseY());
     }

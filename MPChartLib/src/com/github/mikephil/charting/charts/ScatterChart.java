@@ -5,7 +5,7 @@ import android.content.Context;
 import android.util.AttributeSet;
 
 import com.github.mikephil.charting.data.ScatterData;
-import com.github.mikephil.charting.interfaces.ScatterDataProvider;
+import com.github.mikephil.charting.interfaces.dataprovider.ScatterDataProvider;
 import com.github.mikephil.charting.renderer.ScatterChartRenderer;
 
 /**
@@ -18,12 +18,10 @@ import com.github.mikephil.charting.renderer.ScatterChartRenderer;
 public class ScatterChart extends BarLineChartBase<ScatterData> implements ScatterDataProvider {
 
     /**
-     * enum that defines the shape that is drawn where the values are, CIRCLE
-     * and SCQUARE offer the best performance, TRIANGLE has the worst
-     * performance.
+     * enum that defines the shape that is drawn where the values are
      */
     public enum ScatterShape {
-        CROSS, TRIANGLE, CIRCLE, SQUARE
+        SQUARE, CIRCLE, TRIANGLE, CROSS, X,
     }
 
     public ScatterChart(Context context) {

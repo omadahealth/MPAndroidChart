@@ -20,6 +20,7 @@ import com.github.mikephil.charting.components.YAxis.AxisDependency;
 import com.github.mikephil.charting.data.CandleData;
 import com.github.mikephil.charting.data.CandleDataSet;
 import com.github.mikephil.charting.data.CandleEntry;
+import com.github.mikephil.charting.interfaces.datasets.ICandleDataSet;
 import com.xxmassdeveloper.mpchartexample.notimportant.DemoBase;
 
 import java.util.ArrayList;
@@ -47,6 +48,7 @@ public class CandleStickChartActivity extends DemoBase implements OnSeekBarChang
         mSeekBarY.setOnSeekBarChangeListener(this);
 
         mChart = (CandleStickChart) findViewById(R.id.chart1);
+        mChart.setBackgroundColor(Color.WHITE);
 
         mChart.setDescription("");
 
@@ -69,7 +71,6 @@ public class CandleStickChartActivity extends DemoBase implements OnSeekBarChang
         leftAxis.setLabelCount(7, false);
         leftAxis.setDrawGridLines(false);
         leftAxis.setDrawAxisLine(false);
-        leftAxis.setStartAtZero(false);
         
         YAxis rightAxis = mChart.getAxisRight();
         rightAxis.setEnabled(false);
@@ -101,11 +102,10 @@ public class CandleStickChartActivity extends DemoBase implements OnSeekBarChang
 
         switch (item.getItemId()) {
             case R.id.actionToggleHighlight: {
-                if (mChart.isHighlightEnabled())
-                    mChart.setHighlightEnabled(false);
-                else
-                    mChart.setHighlightEnabled(true);
-                mChart.invalidate();
+                if(mChart.getData() != null) {
+                    mChart.getData().setHighlightEnabled(!mChart.getData().isHighlightEnabled());
+                    mChart.invalidate();
+                }
                 break;
             }
             case R.id.actionTogglePinch: {
@@ -123,17 +123,10 @@ public class CandleStickChartActivity extends DemoBase implements OnSeekBarChang
                 break;
             }
             case R.id.actionToggleMakeShadowSameColorAsCandle: {
-                for (CandleDataSet set : mChart.getData().getDataSets())
-                {
-                    set.setShadowColorSameAsCandle(!set.getShadowColorSameAsCandle());
+                for (ICandleDataSet set : mChart.getData().getDataSets()) {
+                   //TODO: set.setShadowColorSameAsCandle(!set.getShadowColorSameAsCandle());
                 }
 
-                mChart.invalidate();
-                break;
-            }
-            case R.id.actionToggleStartzero: {
-                mChart.getAxisLeft().setStartAtZero(!mChart.getAxisLeft().isStartAtZeroEnabled());
-                mChart.getAxisRight().setStartAtZero(!mChart.getAxisRight().isStartAtZeroEnabled());
                 mChart.invalidate();
                 break;
             }
@@ -202,9 +195,10 @@ public class CandleStickChartActivity extends DemoBase implements OnSeekBarChang
         set1.setShadowColor(Color.DKGRAY);
         set1.setShadowWidth(0.7f);
         set1.setDecreasingColor(Color.RED);
-        set1.setDecreasingPaintStyle(Paint.Style.STROKE);
+        set1.setDecreasingPaintStyle(Paint.Style.FILL);
         set1.setIncreasingColor(Color.rgb(122, 242, 84));
-        set1.setIncreasingPaintStyle(Paint.Style.FILL);
+        set1.setIncreasingPaintStyle(Paint.Style.STROKE);
+        set1.setNeutralColor(Color.BLUE);
         //set1.setHighlightLineWidth(1f);
 
         CandleData data = new CandleData(xVals, set1);

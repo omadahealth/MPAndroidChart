@@ -10,11 +10,11 @@ import android.util.Log;
 import com.github.mikephil.charting.components.Legend.LegendPosition;
 import com.github.mikephil.charting.components.XAxis.XAxisPosition;
 import com.github.mikephil.charting.components.YAxis.AxisDependency;
-import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.highlight.HorizontalBarHighlighter;
+import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.github.mikephil.charting.renderer.HorizontalBarChartRenderer;
 import com.github.mikephil.charting.renderer.XAxisRendererHorizontalBarChart;
 import com.github.mikephil.charting.renderer.YAxisRendererHorizontalBarChart;
@@ -49,7 +49,7 @@ public class HorizontalBarChart extends BarChart {
 		mRightAxisTransformer = new TransformerHorizontalBarChart(mViewPortHandler);
 
 		mRenderer = new HorizontalBarChartRenderer(this, mAnimator, mViewPortHandler);
-		mHighlighter = new HorizontalBarHighlighter(this);
+		setHighlighter(new HorizontalBarHighlighter(this));
 
 		mAxisRendererLeft = new YAxisRendererHorizontalBarChart(mViewPortHandler, mAxisLeft, mLeftAxisTransformer);
 		mAxisRendererRight = new YAxisRendererHorizontalBarChart(mViewPortHandler, mAxisRight, mRightAxisTransformer);
@@ -79,9 +79,23 @@ public class HorizontalBarChart extends BarChart {
 					|| mLegend.getPosition() == LegendPosition.BELOW_CHART_RIGHT
 					|| mLegend.getPosition() == LegendPosition.BELOW_CHART_CENTER) {
 
-				float yOffset = mLegend.mTextHeightMax * 2.f; // It's possible that we do not need this offset anymore
-																// as it is available through the extraOffsets
+				// It's possible that we do not need this offset anymore as it
+				//   is available through the extraOffsets, but changing it can mean
+				//   changing default visibility for existing apps.
+				float yOffset = mLegend.mTextHeightMax;
+
 				offsetBottom += Math.min(mLegend.mNeededHeight + yOffset, mViewPortHandler.getChartHeight() * mLegend.getMaxSizePercent());
+
+			} else if (mLegend.getPosition() == LegendPosition.ABOVE_CHART_LEFT
+					|| mLegend.getPosition() == LegendPosition.ABOVE_CHART_RIGHT
+					|| mLegend.getPosition() == LegendPosition.ABOVE_CHART_CENTER) {
+
+				// It's possible that we do not need this offset anymore as it
+				//   is available through the extraOffsets, but changing it can mean
+				//   changing default visibility for existing apps.
+				float yOffset = mLegend.mTextHeightMax * 2.f;
+
+				offsetTop += Math.min(mLegend.mNeededHeight + yOffset, mViewPortHandler.getChartHeight() * mLegend.getMaxSizePercent());
 			}
 		}
 
@@ -94,7 +108,7 @@ public class HorizontalBarChart extends BarChart {
 			offsetBottom += mAxisRight.getRequiredHeightSpace(mAxisRendererRight.getPaintAxisLabels());
 		}
 
-		float xlabelwidth = mXAxisBottom.mLabelWidth;
+		float xlabelwidth = mXAxisBottom.mLabelRotatedWidth;
 
 		if (mXAxisBottom.isEnabled()) {
 
@@ -119,10 +133,13 @@ public class HorizontalBarChart extends BarChart {
 		offsetBottom += getExtraBottomOffset();
 		offsetLeft += getExtraLeftOffset();
 
-		float min = Utils.convertDpToPixel(10f);
+		float minOffset = Utils.convertDpToPixel(mMinOffset);
 
-		mViewPortHandler.restrainViewPort(Math.max(min, offsetLeft), Math.max(min, offsetTop), Math.max(min, offsetRight),
-				Math.max(min, offsetBottom));
+		mViewPortHandler.restrainViewPort(
+				Math.max(minOffset, offsetLeft),
+				Math.max(minOffset, offsetTop),
+				Math.max(minOffset, offsetRight),
+				Math.max(minOffset, offsetBottom));
 
 		if (mLogEnabled) {
 			Log.i(LOG_TAG, "offsetLeft: " + offsetLeft + ", offsetTop: " + offsetTop + ", offsetRight: " + offsetRight + ", offsetBottom: "
@@ -145,8 +162,9 @@ public class HorizontalBarChart extends BarChart {
 		float[] values = new float[9];
 		mViewPortHandler.getMatrixTouch().getValues(values);
 
-		mXAxisBottom.mAxisLabelModulus = (int) Math.ceil((mData.getXValCount() * mXAxisBottom.mLabelHeight)
-				/ (mViewPortHandler.contentHeight() * values[Matrix.MSCALE_Y]));
+		mXAxisBottom.mAxisLabelModulus =
+				(int) Math.ceil((mData.getXValCount() * mXAxisBottom.mLabelRotatedHeight)
+						/ (mViewPortHandler.contentHeight() * values[Matrix.MSCALE_Y]));
 
 		if (mXAxisBottom.mAxisLabelModulus < 1)
 			mXAxisBottom.mAxisLabelModulus = 1;
@@ -155,7 +173,7 @@ public class HorizontalBarChart extends BarChart {
 	@Override
 	public RectF getBarBounds(BarEntry e) {
 
-		BarDataSet set = mData.getDataSetForEntry(e);
+		IBarDataSet set = mData.getDataSetForEntry(e);
 
 		if (set == null)
 			return null;
@@ -202,11 +220,11 @@ public class HorizontalBarChart extends BarChart {
 	@Override
 	public Highlight getHighlightByTouchPoint(float x, float y) {
 
-		if (mDataNotSet || mData == null) {
+		if (mData == null) {
 			Log.e(LOG_TAG, "Can't select by touch. No data set.");
 			return null;
 		} else
-			return mHighlighter.getHighlight(y, x); // switch x and y
+			return getHighlighter().getHighlight(y, x); // switch x and y
 	}
 
 	/**

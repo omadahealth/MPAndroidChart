@@ -18,10 +18,10 @@ import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
-import com.github.mikephil.charting.data.DataSet;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.filter.Approximator;
 import com.github.mikephil.charting.data.filter.Approximator.ApproximatorType;
+import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.formatter.ValueFormatter;
@@ -31,6 +31,7 @@ import com.xxmassdeveloper.mpchartexample.notimportant.DemoBase;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.List;
 
 public class StackedBarActivityNegative extends DemoBase implements
         OnChartValueSelectedListener {
@@ -58,9 +59,10 @@ public class StackedBarActivityNegative extends DemoBase implements
         mChart.setDrawValueAboveBar(true);
         
         mChart.getAxisLeft().setEnabled(false);
-        mChart.getAxisRight().setStartAtZero(false);
         mChart.getAxisRight().setAxisMaxValue(25f);
         mChart.getAxisRight().setAxisMinValue(-25f);
+        mChart.getAxisRight().setDrawGridLines(false);
+        mChart.getAxisRight().setDrawZeroLine(true);
         mChart.getAxisRight().setLabelCount(7, false);
         mChart.getAxisRight().setValueFormatter(new CustomFormatter());
         mChart.getAxisRight().setTextSize(9f);
@@ -119,18 +121,23 @@ public class StackedBarActivityNegative extends DemoBase implements
 
         switch (item.getItemId()) {
             case R.id.actionToggleValues: {
-                for (DataSet<?> set : mChart.getData().getDataSets())
+                List<IBarDataSet> sets = mChart.getData()
+                        .getDataSets();
+
+                for (IBarDataSet iSet : sets) {
+
+                    BarDataSet set = (BarDataSet) iSet;
                     set.setDrawValues(!set.isDrawValuesEnabled());
+                }
 
                 mChart.invalidate();
                 break;
             }
             case R.id.actionToggleHighlight: {
-                if (mChart.isHighlightEnabled())
-                    mChart.setHighlightEnabled(false);
-                else
-                    mChart.setHighlightEnabled(true);
-                mChart.invalidate();
+                if(mChart.getData() != null) {
+                    mChart.getData().setHighlightEnabled(!mChart.getData().isHighlightEnabled());
+                    mChart.invalidate();
+                }
                 break;
             }
             case R.id.actionTogglePinch: {
@@ -155,12 +162,6 @@ public class StackedBarActivityNegative extends DemoBase implements
                 mChart.invalidate();
                 break;
             }
-            case R.id.actionToggleStartzero: {
-                mChart.getAxisLeft().setStartAtZero(!mChart.getAxisLeft().isStartAtZeroEnabled());
-                mChart.getAxisRight().setStartAtZero(!mChart.getAxisRight().isStartAtZeroEnabled());
-                mChart.invalidate();
-                break;
-            }
             case R.id.animateX: {
                 mChart.animateX(3000);
                 break;
@@ -172,18 +173,6 @@ public class StackedBarActivityNegative extends DemoBase implements
             case R.id.animateXY: {
 
                 mChart.animateXY(3000, 3000);
-                break;
-            }
-            case R.id.actionToggleFilter: {
-
-                Approximator a = new Approximator(ApproximatorType.DOUGLAS_PEUCKER, 25);
-
-                if (!mChart.isFilteringEnabled()) {
-                    mChart.enableFiltering(a);
-                } else {
-                    mChart.disableFiltering();
-                }
-                mChart.invalidate();
                 break;
             }
             case R.id.actionSave: {
@@ -210,7 +199,7 @@ public class StackedBarActivityNegative extends DemoBase implements
     @Override
     public void onNothingSelected() {
         // TODO Auto-generated method stub
-
+        Log.i("NOTING SELECTED", "");
     }
 
     private class CustomFormatter implements ValueFormatter, YAxisValueFormatter {

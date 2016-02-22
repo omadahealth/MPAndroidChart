@@ -19,11 +19,11 @@ import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
-import com.github.mikephil.charting.data.DataSet;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.filter.Approximator;
 import com.github.mikephil.charting.data.filter.Approximator.ApproximatorType;
 import com.github.mikephil.charting.highlight.Highlight;
+import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.xxmassdeveloper.mpchartexample.custom.MyValueFormatter;
@@ -31,6 +31,7 @@ import com.xxmassdeveloper.mpchartexample.custom.MyYAxisValueFormatter;
 import com.xxmassdeveloper.mpchartexample.notimportant.DemoBase;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class StackedBarActivity extends DemoBase implements OnSeekBarChangeListener, OnChartValueSelectedListener {
 
@@ -71,8 +72,9 @@ public class StackedBarActivity extends DemoBase implements OnSeekBarChangeListe
 		mChart.setDrawValueAboveBar(false);
 
 		// change the position of the y-labels
-		YAxis yLabels = mChart.getAxisLeft();
-		yLabels.setValueFormatter(new MyYAxisValueFormatter());
+		YAxis leftAxis = mChart.getAxisLeft();
+		leftAxis.setValueFormatter(new MyYAxisValueFormatter());
+		leftAxis.setAxisMinValue(0f); // this replaces setStartAtZero(true)
 		mChart.getAxisRight().setEnabled(false);
 
 		XAxis xLabels = mChart.getXAxisBottom();
@@ -105,18 +107,23 @@ public class StackedBarActivity extends DemoBase implements OnSeekBarChangeListe
 
 		switch (item.getItemId()) {
 		case R.id.actionToggleValues: {
-			for (DataSet<?> set : mChart.getData().getDataSets())
+			List<IBarDataSet> sets = mChart.getData()
+					.getDataSets();
+
+			for (IBarDataSet iSet : sets) {
+
+				BarDataSet set = (BarDataSet) iSet;
 				set.setDrawValues(!set.isDrawValuesEnabled());
+			}
 
 			mChart.invalidate();
 			break;
 		}
 		case R.id.actionToggleHighlight: {
-			if (mChart.isHighlightEnabled())
-				mChart.setHighlightEnabled(false);
-			else
-				mChart.setHighlightEnabled(true);
-			mChart.invalidate();
+			if(mChart.getData() != null) {
+				mChart.getData().setHighlightEnabled(!mChart.getData().isHighlightEnabled());
+				mChart.invalidate();
+			}
 			break;
 		}
 		case R.id.actionTogglePinch: {
@@ -141,12 +148,6 @@ public class StackedBarActivity extends DemoBase implements OnSeekBarChangeListe
 			mChart.invalidate();
 			break;
 		}
-		case R.id.actionToggleStartzero: {
-			mChart.getAxisLeft().setStartAtZero(!mChart.getAxisLeft().isStartAtZeroEnabled());
-			mChart.getAxisRight().setStartAtZero(!mChart.getAxisRight().isStartAtZeroEnabled());
-			mChart.invalidate();
-			break;
-		}
 		case R.id.animateX: {
 			mChart.animateX(3000);
 			break;
@@ -158,18 +159,6 @@ public class StackedBarActivity extends DemoBase implements OnSeekBarChangeListe
 		case R.id.animateXY: {
 
 			mChart.animateXY(3000, 3000);
-			break;
-		}
-		case R.id.actionToggleFilter: {
-
-			Approximator a = new Approximator(ApproximatorType.DOUGLAS_PEUCKER, 25);
-
-			if (!mChart.isFilteringEnabled()) {
-				mChart.enableFiltering(a);
-			} else {
-				mChart.disableFiltering();
-			}
-			mChart.invalidate();
 			break;
 		}
 		case R.id.actionSave: {
@@ -209,7 +198,7 @@ public class StackedBarActivity extends DemoBase implements OnSeekBarChangeListe
 		set1.setColors(getColors());
 		set1.setStackLabels(new String[] { "Births", "Divorces", "Marriages" });
 
-		ArrayList<BarDataSet> dataSets = new ArrayList<BarDataSet>();
+		ArrayList<IBarDataSet> dataSets = new ArrayList<IBarDataSet>();
 		dataSets.add(set1);
 
 		BarData data = new BarData(xVals, dataSets);
