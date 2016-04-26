@@ -3,9 +3,7 @@ package com.xxmassdeveloper.mpchartexample;
 
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
@@ -20,12 +18,10 @@ import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
-import com.github.mikephil.charting.data.filter.Approximator;
-import com.github.mikephil.charting.data.filter.Approximator.ApproximatorType;
 import com.github.mikephil.charting.formatter.FillFormatter;
+import com.github.mikephil.charting.interfaces.dataprovider.LineDataProvider;
 import com.github.mikephil.charting.interfaces.datasets.IDataSet;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
-import com.github.mikephil.charting.interfaces.dataprovider.LineDataProvider;
 import com.xxmassdeveloper.mpchartexample.notimportant.DemoBase;
 
 import java.util.ArrayList;
@@ -36,7 +32,7 @@ public class CubicLineChartActivity extends DemoBase implements OnSeekBarChangeL
     private LineChart mChart;
     private SeekBar mSeekBarX, mSeekBarY;
     private TextView tvX, tvY;
-    
+
     private Typeface tf;
 
     @Override
@@ -76,13 +72,13 @@ public class CubicLineChartActivity extends DemoBase implements OnSeekBarChangeL
         mChart.setPinchZoom(false);
 
         mChart.setDrawGridBackground(false);
-        
+
         tf = Typeface.createFromAsset(getAssets(), "OpenSans-Regular.ttf");
-        
+
         XAxis x = mChart.getXAxisBottom();
         x.setTypeface(tf);
         x.setEnabled(false);
-        
+
         YAxis y = mChart.getAxisLeft();
         y.setTypeface(tf);
         y.setLabelCount(6, false);
@@ -90,14 +86,14 @@ public class CubicLineChartActivity extends DemoBase implements OnSeekBarChangeL
         y.setPosition(YAxis.YAxisLabelPosition.INSIDE_CHART);
         y.setDrawGridLines(false);
         y.setAxisLineColor(Color.WHITE);
-        
+
         mChart.getAxisRight().setEnabled(false);
 
         // add data
         setData(45, 100);
-        
+
         mChart.getLegend().setEnabled(false);
-        
+
         mChart.animateXY(2000, 2000);
 
         // dont forget to refresh the drawing
@@ -122,7 +118,7 @@ public class CubicLineChartActivity extends DemoBase implements OnSeekBarChangeL
                 break;
             }
             case R.id.actionToggleHighlight: {
-                if(mChart.getData() != null) {
+                if (mChart.getData() != null) {
                     mChart.getData().setHighlightEnabled(!mChart.getData().isHighlightEnabled());
                     mChart.invalidate();
                 }
@@ -169,7 +165,7 @@ public class CubicLineChartActivity extends DemoBase implements OnSeekBarChangeL
                     LineDataSet set = (LineDataSet) iSet;
                     set.setMode(set.getMode() == LineDataSet.Mode.CUBIC_BEZIER
                             ? LineDataSet.Mode.LINEAR
-                            :  LineDataSet.Mode.CUBIC_BEZIER);
+                            : LineDataSet.Mode.CUBIC_BEZIER);
                 }
                 mChart.invalidate();
                 break;
@@ -183,7 +179,7 @@ public class CubicLineChartActivity extends DemoBase implements OnSeekBarChangeL
                     LineDataSet set = (LineDataSet) iSet;
                     set.setMode(set.getMode() == LineDataSet.Mode.STEPPED
                             ? LineDataSet.Mode.LINEAR
-                            :  LineDataSet.Mode.STEPPED);
+                            : LineDataSet.Mode.STEPPED);
                 }
                 mChart.invalidate();
                 break;
@@ -197,7 +193,7 @@ public class CubicLineChartActivity extends DemoBase implements OnSeekBarChangeL
                     LineDataSet set = (LineDataSet) iSet;
                     set.setMode(set.getMode() == LineDataSet.Mode.HORIZONTAL_BEZIER
                             ? LineDataSet.Mode.LINEAR
-                            :  LineDataSet.Mode.HORIZONTAL_BEZIER);
+                            : LineDataSet.Mode.HORIZONTAL_BEZIER);
                 }
                 mChart.invalidate();
                 break;
@@ -271,7 +267,7 @@ public class CubicLineChartActivity extends DemoBase implements OnSeekBarChangeL
 
         ArrayList<String> xVals = new ArrayList<String>();
         for (int i = 0; i < count; i++) {
-            xVals.add((1990 +i) + "");
+            xVals.add((1990 + i) + "");
         }
 
         ArrayList<Entry> yVals = new ArrayList<Entry>();
@@ -279,8 +275,8 @@ public class CubicLineChartActivity extends DemoBase implements OnSeekBarChangeL
         for (int i = 0; i < count; i++) {
             float mult = (range + 1);
             float val = (float) (Math.random() * mult) + 20;// + (float)
-                                                           // ((mult *
-                                                           // 0.1) / 10);
+            // ((mult *
+            // 0.1) / 10);
             yVals.add(new Entry(val, i));
         }
 
@@ -288,7 +284,7 @@ public class CubicLineChartActivity extends DemoBase implements OnSeekBarChangeL
 
         if (mChart.getData() != null &&
                 mChart.getData().getDataSetCount() > 0) {
-            set1 = (LineDataSet)mChart.getData().getDataSetByIndex(0);
+            set1 = (LineDataSet) mChart.getData().getDataSetByIndex(0);
             set1.setYVals(yVals);
             mChart.getData().setXVals(xVals);
             mChart.notifyDataSetChanged();
@@ -320,33 +316,6 @@ public class CubicLineChartActivity extends DemoBase implements OnSeekBarChangeL
             data.setValueTypeface(tf);
             data.setValueTextSize(9f);
             data.setDrawValues(false);
-
-        // create a dataset and give it a type
-        LineDataSet set1 = new LineDataSet(vals1, "DataSet 1");
-        set1.setDrawCubic(true);
-        set1.setCubicIntensity(0.2f);
-        //set1.setDrawFilled(true);
-        set1.setDrawCircles(false);
-        set1.setLineWidth(1.8f);
-        set1.setCircleRadius(4f);
-        set1.setCircleColor(Color.WHITE);
-        set1.setHighLightColor(Color.rgb(244, 117, 117));
-        set1.setColor(Color.WHITE);
-        set1.setFillColor(Color.WHITE);
-        set1.setFillAlpha(100);
-        set1.setDrawHorizontalHighlightIndicator(false);
-        set1.setFillFormatter(new FillFormatter() {
-            @Override
-            public float getFillLinePosition(ILineDataSet dataSet, LineDataProvider dataProvider) {
-                return -10;
-            }
-        });
-
-        // create a data object with the datasets
-        LineData data = new LineData(xVals, set1);
-        data.setValueTypeface(tf);
-        data.setValueTextSize(9f);
-        data.setDrawValues(false);
 
             // set data
             mChart.setData(data);

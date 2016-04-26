@@ -15,8 +15,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 
-import com.github.mikephil.charting.components.Legend;
-import com.github.mikephil.charting.components.Legend.LegendPosition;
+import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.XAxis.XAxisPosition;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.components.YAxis.AxisDependency;
@@ -127,6 +126,16 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
      */
     protected YAxis mAxisRight;
 
+    /**
+     * the object representing the labels on the x-axis bottom
+     */
+    protected XAxis mXAxisBottom;
+
+    /**
+     * the object representing the labels on the x-axis top
+     */
+    protected XAxis mXAxisTop;
+
     protected YAxisRenderer mAxisRendererLeft;
     protected YAxisRenderer mAxisRendererRight;
 
@@ -157,6 +166,9 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
 
         mAxisLeft = new YAxis(AxisDependency.LEFT);
         mAxisRight = new YAxis(AxisDependency.RIGHT);
+
+        mXAxisBottom = new XAxis();
+        mXAxisTop = new XAxis();
 
         mLeftAxisTransformer = new Transformer(mViewPortHandler);
         mRightAxisTransformer = new Transformer(mViewPortHandler);
@@ -1468,6 +1480,17 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
     @Override
     public boolean isInverted(AxisDependency axis) {
         return getAxis(axis).isInverted();
+    }
+
+    /**
+     * Returns the object representing all x-labels, this method can be used to
+     * acquire the XAxis object and modify it (e.g. change the position of the
+     * labels)
+     *
+     * @return
+     */
+    public XAxis getXAxis() {
+        return mXAxisTop;
     }
 
     /**
