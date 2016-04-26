@@ -191,7 +191,7 @@ public class XAxisRenderer extends AxisRenderer {
 
     protected void drawLabel(Canvas c, String label, int xIndex, float x, float y, PointF anchor, float angleDegrees) {
         String formattedLabel = mXAxis.getValueFormatter().getXValue(label, xIndex, mViewPortHandler);
-        Utils.drawText(c, formattedLabel, x, y, mAxisLabelPaint, anchor, angleDegrees);
+        Utils.drawXAxisValue(c, formattedLabel, x, y, mAxisLabelPaint, anchor, angleDegrees);
     }
 
     @Override

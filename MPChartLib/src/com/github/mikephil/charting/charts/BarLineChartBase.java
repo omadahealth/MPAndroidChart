@@ -2,6 +2,7 @@
 package com.github.mikephil.charting.charts;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -9,12 +10,13 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.PointF;
+import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 
+import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.Legend.LegendPosition;
-import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.XAxis.XAxisPosition;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.components.YAxis.AxisDependency;
@@ -26,7 +28,10 @@ import com.github.mikephil.charting.highlight.ChartHighlighter;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.interfaces.dataprovider.BarLineScatterCandleBubbleDataProvider;
 import com.github.mikephil.charting.interfaces.datasets.IBarLineScatterCandleBubbleDataSet;
+import com.github.mikephil.charting.jobs.AnimatedMoveViewJob;
+import com.github.mikephil.charting.jobs.AnimatedZoomJob;
 import com.github.mikephil.charting.jobs.MoveViewJob;
+import com.github.mikephil.charting.jobs.ZoomJob;
 import com.github.mikephil.charting.listener.BarLineChartTouchListener;
 import com.github.mikephil.charting.listener.OnDrawListener;
 import com.github.mikephil.charting.renderer.XAxisRenderer;
@@ -103,6 +108,11 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
     protected float mMinOffset = 15.f;
 
     /**
+     * flag indicating if the chart should stay at the same position after a rotation. Default is false.
+     */
+    protected boolean mKeepPositionOnRotation = false;
+
+    /**
      * the listener for user drawing on the chart
      */
     protected OnDrawListener mDrawListener;
@@ -116,10 +126,6 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
      * the object representing the labels on the right y-axis
      */
     protected YAxis mAxisRight;
-
-    /** the object representing the labels on the x-axis */
-    protected XAxis mXAxisTop;
-    protected XAxis mXAxisBottom;
 
     protected YAxisRenderer mAxisRendererLeft;
     protected YAxisRenderer mAxisRendererRight;
@@ -151,9 +157,6 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
 
         mAxisLeft = new YAxis(AxisDependency.LEFT);
         mAxisRight = new YAxis(AxisDependency.RIGHT);
-
-        mXAxisTop = new XAxis();
-        mXAxisBottom = new XAxis();
 
         mLeftAxisTransformer = new Transformer(mViewPortHandler);
         mRightAxisTransformer = new Transformer(mViewPortHandler);
@@ -308,12 +311,16 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
     protected void prepareValuePxMatrix() {
 
         if (mLogEnabled)
-            Log.i(LOG_TAG, "Preparing Value-Px Matrix, xmin: " + mXChartMin + ", xmax: "
-                    + mXChartMax + ", xdelta: " + mDeltaX);
+            Log.i(LOG_TAG, "Preparing Value-Px Matrix, xmin: " + mXAxis.mAxisMinimum + ", xmax: "
+                    + mXAxis.mAxisMaximum + ", xdelta: " + mXAxis.mAxisRange);
 
-        mRightAxisTransformer.prepareMatrixValuePx(mXChartMin, mDeltaX, mAxisRight.mAxisRange,
+        mRightAxisTransformer.prepareMatrixValuePx(mXAxis.mAxisMinimum,
+                mXAxis.mAxisRange,
+                mAxisRight.mAxisRange,
                 mAxisRight.mAxisMinimum);
-        mLeftAxisTransformer.prepareMatrixValuePx(mXChartMin, mDeltaX, mAxisLeft.mAxisRange,
+        mLeftAxisTransformer.prepareMatrixValuePx(mXAxis.mAxisMinimum,
+                mXAxis.mAxisRange,
+                mAxisLeft.mAxisRange,
                 mAxisLeft.mAxisMinimum);
     }
 
@@ -358,43 +365,99 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
         if (mAutoScaleMinMaxEnabled)
             mData.calcMinMax(getLowestVisibleXIndex(), getHighestVisibleXIndex());
 
-        float minLeft = mData.getYMin(AxisDependency.LEFT);
-        float maxLeft = mData.getYMax(AxisDependency.LEFT);
-        float minRight = mData.getYMin(AxisDependency.RIGHT);
-        float maxRight = mData.getYMax(AxisDependency.RIGHT);
+        // calculate / set x-axis range
+        mXAxis.mAxisMaximum = mData.getXVals().size() - 1;
+        mXAxis.mAxisRange = Math.abs(mXAxis.mAxisMaximum - mXAxis.mAxisMinimum);
 
-        float leftRange = Math.abs(maxLeft - minLeft);
-        float rightRange = Math.abs(maxRight - minRight);
-
-        // in case all values are equal
-        if (leftRange == 0f) {
-            maxLeft = maxLeft + 1f;
-            minLeft = minLeft - 1f;
-        }
-
-        if (rightRange == 0f) {
-            maxRight = maxRight + 1f;
-            minRight = minRight - 1f;
-        }
-
-        float topSpaceLeft = leftRange / 100f * mAxisLeft.getSpaceTop();
-        float topSpaceRight = rightRange / 100f * mAxisRight.getSpaceTop();
-        float bottomSpaceLeft = leftRange / 100f * mAxisLeft.getSpaceBottom();
-        float bottomSpaceRight = rightRange / 100f * mAxisRight.getSpaceBottom();
-
-        mXChartMax = mData.getXVals().size() - 1;
-        mDeltaX = Math.abs(mXChartMax - mXChartMin);
-
-        // Use the values as they are
-        mAxisLeft.mAxisMinimum = !Float.isNaN(mAxisLeft.getAxisMinValue()) ? mAxisLeft.getAxisMinValue() : (minLeft - bottomSpaceLeft);
-        mAxisLeft.mAxisMaximum = !Float.isNaN(mAxisLeft.getAxisMaxValue()) ? mAxisLeft.getAxisMaxValue() : (maxLeft + topSpaceLeft);
-
-        mAxisRight.mAxisMinimum = !Float.isNaN(mAxisRight.getAxisMinValue()) ? mAxisRight.getAxisMinValue() : (minRight - bottomSpaceRight);
-        mAxisRight.mAxisMaximum = !Float.isNaN(mAxisRight.getAxisMaxValue()) ? mAxisRight.getAxisMaxValue() : (maxRight + topSpaceRight);
-
-        mAxisLeft.mAxisRange = Math.abs(mAxisLeft.mAxisMaximum - mAxisLeft.mAxisMinimum);
-        mAxisRight.mAxisRange = Math.abs(mAxisRight.mAxisMaximum - mAxisRight.mAxisMinimum);
+        // calculate axis range (min / max) according to provided data
+        mAxisLeft.calculate(mData.getYMin(AxisDependency.LEFT), mData.getYMax(AxisDependency.LEFT));
+        mAxisRight.calculate(mData.getYMin(AxisDependency.RIGHT), mData.getYMax(AxisDependency
+                .RIGHT));
     }
+
+    protected void calculateLegendOffsets(RectF offsets) {
+
+        offsets.left = 0.f;
+        offsets.right = 0.f;
+        offsets.top = 0.f;
+        offsets.bottom = 0.f;
+
+        // setup offsets for legend
+        if (mLegend != null && mLegend.isEnabled() && !mLegend.isDrawInsideEnabled()) {
+            switch (mLegend.getOrientation()) {
+                case VERTICAL:
+
+                    switch (mLegend.getHorizontalAlignment()) {
+                        case LEFT:
+                            offsets.left += Math.min(mLegend.mNeededWidth,
+                                    mViewPortHandler.getChartWidth() * mLegend.getMaxSizePercent())
+                                    + mLegend.getXOffset();
+                            break;
+
+                        case RIGHT:
+                            offsets.right += Math.min(mLegend.mNeededWidth,
+                                    mViewPortHandler.getChartWidth() * mLegend.getMaxSizePercent())
+                                    + mLegend.getXOffset();
+                            break;
+
+                        case CENTER:
+
+                            switch (mLegend.getVerticalAlignment()) {
+                                case TOP:
+                                    offsets.top += Math.min(mLegend.mNeededHeight,
+                                            mViewPortHandler.getChartHeight() * mLegend.getMaxSizePercent())
+                                            + mLegend.getYOffset();
+
+                                    if (getXAxis().isEnabled() && getXAxis().isDrawLabelsEnabled())
+                                        offsets.top += getXAxis().mLabelRotatedHeight;
+                                    break;
+
+                                case BOTTOM:
+                                    offsets.bottom += Math.min(mLegend.mNeededHeight,
+                                            mViewPortHandler.getChartHeight() * mLegend.getMaxSizePercent())
+                                            + mLegend.getYOffset();
+
+                                    if (getXAxis().isEnabled() && getXAxis().isDrawLabelsEnabled())
+                                        offsets.bottom += getXAxis().mLabelRotatedHeight;
+                                    break;
+
+                                default:
+                                    break;
+                            }
+                    }
+
+                    break;
+
+                case HORIZONTAL:
+
+                    switch (mLegend.getVerticalAlignment()) {
+                        case TOP:
+                            offsets.top += Math.min(mLegend.mNeededHeight,
+                                    mViewPortHandler.getChartHeight() * mLegend.getMaxSizePercent())
+                                    + mLegend.getYOffset();
+
+                            if (getXAxis().isEnabled() && getXAxis().isDrawLabelsEnabled())
+                                offsets.top += getXAxis().mLabelRotatedHeight;
+                            break;
+
+                        case BOTTOM:
+                            offsets.bottom += Math.min(mLegend.mNeededHeight,
+                                    mViewPortHandler.getChartHeight() * mLegend.getMaxSizePercent())
+                                    + mLegend.getYOffset();
+
+                            if (getXAxis().isEnabled() && getXAxis().isDrawLabelsEnabled())
+                                offsets.bottom += getXAxis().mLabelRotatedHeight;
+                            break;
+
+                        default:
+                            break;
+                    }
+                    break;
+            }
+        }
+    }
+
+    private RectF mOffsetsBuffer = new RectF();
 
     @Override
     public void calculateOffsets() {
@@ -403,49 +466,12 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
 
             float offsetLeft = 0f, offsetRight = 0f, offsetTop = 0f, offsetBottom = 0f;
 
-            // setup offsets for legend
-            if (mLegend != null && mLegend.isEnabled()) {
+            calculateLegendOffsets(mOffsetsBuffer);
 
-                if (mLegend.getPosition() == LegendPosition.RIGHT_OF_CHART
-                        || mLegend.getPosition() == LegendPosition.RIGHT_OF_CHART_CENTER) {
-
-                    offsetRight += Math.min(mLegend.mNeededWidth, mViewPortHandler.getChartWidth()
-                            * mLegend.getMaxSizePercent())
-                            + mLegend.getXOffset() * 2f;
-
-                } else if (mLegend.getPosition() == LegendPosition.LEFT_OF_CHART
-                        || mLegend.getPosition() == LegendPosition.LEFT_OF_CHART_CENTER) {
-
-                    offsetLeft += Math.min(mLegend.mNeededWidth, mViewPortHandler.getChartWidth()
-                            * mLegend.getMaxSizePercent())
-                            + mLegend.getXOffset() * 2f;
-
-                } else if (mLegend.getPosition() == LegendPosition.BELOW_CHART_LEFT
-                        || mLegend.getPosition() == LegendPosition.BELOW_CHART_RIGHT
-                        || mLegend.getPosition() == LegendPosition.BELOW_CHART_CENTER) {
-
-                    // It's possible that we do not need this offset anymore as it
-                    //   is available through the extraOffsets, but changing it can mean
-                    //   changing default visibility for existing apps.
-                    float yOffset = mLegend.mTextHeightMax;
-
-                    offsetBottom += Math.min(mLegend.mNeededHeight + yOffset,
-                            mViewPortHandler.getChartHeight() * mLegend.getMaxSizePercent());
-
-                } else if (mLegend.getPosition() == LegendPosition.ABOVE_CHART_LEFT
-                        || mLegend.getPosition() == LegendPosition.ABOVE_CHART_RIGHT
-                        || mLegend.getPosition() == LegendPosition.ABOVE_CHART_CENTER) {
-
-                    // It's possible that we do not need this offset anymore as it
-                    //   is available through the extraOffsets, but changing it can mean
-                    //   changing default visibility for existing apps.
-                    float yOffset = mLegend.mTextHeightMax;
-
-                    offsetTop += Math.min(mLegend.mNeededHeight + yOffset,
-                            mViewPortHandler.getChartHeight() * mLegend.getMaxSizePercent());
-
-                }
-            }
+            offsetLeft += mOffsetsBuffer.left;
+            offsetTop += mOffsetsBuffer.top;
+            offsetRight += mOffsetsBuffer.right;
+            offsetBottom += mOffsetsBuffer.bottom;
 
             // offsets for y-labels
             if (mAxisLeft.needsOffset()) {
@@ -678,8 +704,11 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
      * Zooms in by 1.4f, into the charts center. center.
      */
     public void zoomIn() {
-        Matrix save = mViewPortHandler.zoomIn(getWidth() / 2f, -(getHeight() / 2f));
-        mViewPortHandler.refresh(save, this, true);
+
+        PointF center = mViewPortHandler.getContentCenter();
+
+        Matrix save = mViewPortHandler.zoomIn(center.x, -center.y);
+        mViewPortHandler.refresh(save, this, false);
 
         // Range might have changed, which means that Y-axis labels
         // could have changed in size, affecting Y-axis size.
@@ -692,8 +721,11 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
      * Zooms out by 0.7f, from the charts center. center.
      */
     public void zoomOut() {
-        Matrix save = mViewPortHandler.zoomOut(getWidth() / 2f, -(getHeight() / 2f));
-        mViewPortHandler.refresh(save, this, true);
+
+        PointF center = mViewPortHandler.getContentCenter();
+
+        Matrix save = mViewPortHandler.zoomOut(center.x, -center.y);
+        mViewPortHandler.refresh(save, this, false);
 
         // Range might have changed, which means that Y-axis labels
         // could have changed in size, affecting Y-axis size.
@@ -712,8 +744,8 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
      * @param y
      */
     public void zoom(float scaleX, float scaleY, float x, float y) {
-        Matrix save = mViewPortHandler.zoom(scaleX, scaleY, x, -y);
-        mViewPortHandler.refresh(save, this, true);
+        Matrix save = mViewPortHandler.zoom(scaleX, scaleY, x, y);
+        mViewPortHandler.refresh(save, this, false);
 
         // Range might have changed, which means that Y-axis labels
         // could have changed in size, affecting Y-axis size.
@@ -723,16 +755,54 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
     }
 
     /**
+     * Zooms in or out by the given scale factor.
+     * x and y are the values (NOT PIXELS) which to zoom to or from (the values of the zoom center).
+     *
+     * @param scaleX
+     * @param scaleY
+     * @param xValue
+     * @param yValue
+     * @param axis   the axis relative to which the zoom should take place
+     */
+    public void zoom(float scaleX, float scaleY, float xValue, float yValue, AxisDependency axis) {
+
+        Runnable job = new ZoomJob(mViewPortHandler, scaleX, scaleY, xValue, yValue, getTransformer(axis), axis, this);
+        addViewportJob(job);
+    }
+
+    /**
+     * Zooms by the specified scale factor to the specified values on the specified axis.
+     *
+     * @param scaleX
+     * @param scaleY
+     * @param xValue
+     * @param yValue
+     * @param axis
+     * @param duration
+     */
+    @TargetApi(11)
+    public void zoomAndCenterAnimated(float scaleX, float scaleY, float xValue, float yValue, AxisDependency axis, long duration) {
+
+        if (android.os.Build.VERSION.SDK_INT >= 11) {
+
+            PointD origin = getValuesByTouchPoint(mViewPortHandler.contentLeft(), mViewPortHandler.contentTop(), axis);
+
+            Runnable job = new AnimatedZoomJob(mViewPortHandler, this, getTransformer(axis), getAxis(axis), mXAxis.getValues().size(), scaleX, scaleY, mViewPortHandler.getScaleX(), mViewPortHandler.getScaleY(), xValue, yValue, (float) origin.x, (float) origin.y, duration);
+            addViewportJob(job);
+
+        } else {
+            Log.e(LOG_TAG, "Unable to execute zoomAndCenterAnimated(...) on API level < 11");
+        }
+    }
+
+    /**
      * Resets all zooming and dragging and makes the chart fit exactly it's
      * bounds.
      */
     public void fitScreen() {
         Matrix save = mViewPortHandler.fitScreen();
-        mViewPortHandler.refresh(save, this, true);
+        mViewPortHandler.refresh(save, this, false);
 
-        // Range might have changed, which means that Y-axis labels
-        // could have changed in size, affecting Y-axis size.
-        // So we need to recalculate offsets.
         calculateOffsets();
         postInvalidate();
     }
@@ -758,7 +828,7 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
      * @param maxXRange The maximum visible range of x-values.
      */
     public void setVisibleXRangeMaximum(float maxXRange) {
-        float xScale = mDeltaX / (maxXRange);
+        float xScale = mXAxis.mAxisRange / (maxXRange);
         mViewPortHandler.setMinimumScaleX(xScale);
     }
 
@@ -771,7 +841,7 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
      * @param minXRange The minimum visible range of x-values.
      */
     public void setVisibleXRangeMinimum(float minXRange) {
-        float xScale = mDeltaX / (minXRange);
+        float xScale = mXAxis.mAxisRange / (minXRange);
         mViewPortHandler.setMaximumScaleX(xScale);
     }
 
@@ -785,8 +855,8 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
      * @param maxXRange
      */
     public void setVisibleXRange(float minXRange, float maxXRange) {
-        float maxScale = mDeltaX / minXRange;
-        float minScale = mDeltaX / maxXRange;
+        float maxScale = mXAxis.mAxisRange / minXRange;
+        float minScale = mXAxis.mAxisRange / maxXRange;
         mViewPortHandler.setMinMaxScaleX(minScale, maxScale);
     }
 
@@ -813,11 +883,7 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
         Runnable job = new MoveViewJob(mViewPortHandler, xIndex, 0f,
                 getTransformer(AxisDependency.LEFT), this);
 
-        if (mViewPortHandler.hasChartDimens()) {
-            post(job);
-        } else {
-            mJobs.add(job);
-        }
+        addViewportJob(job);
     }
 
     /**
@@ -834,16 +900,12 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
         Runnable job = new MoveViewJob(mViewPortHandler, 0f, yValue + valsInView / 2f,
                 getTransformer(axis), this);
 
-        if (mViewPortHandler.hasChartDimens()) {
-            post(job);
-        } else {
-            mJobs.add(job);
-        }
+        addViewportJob(job);
     }
 
     /**
      * This will move the left side of the current viewport to the specified
-     * x-index on the x-axis, and center the viewport to the specified y-value
+     * x-value on the x-axis, and center the viewport to the specified y-value
      * on the y-axis.
      * This also refreshes the chart by calling invalidate().
      *
@@ -858,23 +920,47 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
         Runnable job = new MoveViewJob(mViewPortHandler, xIndex, yValue + valsInView / 2f,
                 getTransformer(axis), this);
 
-        if (mViewPortHandler.hasChartDimens()) {
-            post(job);
+        addViewportJob(job);
+    }
+
+    /**
+     * This will move the left side of the current viewport to the specified x-position
+     * and center the viewport to the specified y-position animated.
+     * This also refreshes the chart by calling invalidate().
+     *
+     * @param xIndex
+     * @param yValue
+     * @param axis
+     * @param duration the duration of the animation in milliseconds
+     */
+    @TargetApi(11)
+    public void moveViewToAnimated(float xIndex, float yValue, AxisDependency axis, long duration) {
+
+        if (android.os.Build.VERSION.SDK_INT >= 11) {
+
+            PointD bounds = getValuesByTouchPoint(mViewPortHandler.contentLeft(), mViewPortHandler.contentTop(), axis);
+
+            float valsInView = getDeltaY(axis) / mViewPortHandler.getScaleY();
+
+            Runnable job = new AnimatedMoveViewJob(mViewPortHandler, xIndex, yValue + valsInView / 2f,
+                    getTransformer(axis), this, (float) bounds.x, (float) bounds.y, duration);
+
+            addViewportJob(job);
         } else {
-            mJobs.add(job);
+            Log.e(LOG_TAG, "Unable to execute moveViewToAnimated(...) on API level < 11");
         }
     }
 
     /**
      * This will move the center of the current viewport to the specified
-     * x-index and y-value.
+     * x-value and y-value.
      * This also refreshes the chart by calling invalidate().
      *
      * @param xIndex
      * @param yValue
      * @param axis   - which axis should be used as a reference for the y-axis
      */
-    public void centerViewTo(int xIndex, float yValue, AxisDependency axis) {
+    public void centerViewTo(float xIndex, float yValue, AxisDependency axis) {
 
         float valsInView = getDeltaY(axis) / mViewPortHandler.getScaleY();
         float xsInView = (mXAxisTop.getValues().size() + mXAxisBottom.getValues().size()) / mViewPortHandler.getScaleX();
@@ -883,10 +969,35 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
                 xIndex - xsInView / 2f, yValue + valsInView / 2f,
                 getTransformer(axis), this);
 
-        if (mViewPortHandler.hasChartDimens()) {
-            post(job);
+        addViewportJob(job);
+    }
+
+    /**
+     * This will move the center of the current viewport to the specified
+     * x-value and y-value animated.
+     *
+     * @param xIndex
+     * @param yValue
+     * @param axis
+     * @param duration the duration of the animation in milliseconds
+     */
+    @TargetApi(11)
+    public void centerViewToAnimated(float xIndex, float yValue, AxisDependency axis, long duration) {
+
+        if (android.os.Build.VERSION.SDK_INT >= 11) {
+
+            PointD bounds = getValuesByTouchPoint(mViewPortHandler.contentLeft(), mViewPortHandler.contentTop(), axis);
+
+            float valsInView = getDeltaY(axis) / mViewPortHandler.getScaleY();
+            float xsInView = getXAxis().getValues().size() / mViewPortHandler.getScaleX();
+
+            Runnable job = new AnimatedMoveViewJob(mViewPortHandler,
+                    xIndex - xsInView / 2f, yValue + valsInView / 2f,
+                    getTransformer(axis), this, (float) bounds.x, (float) bounds.y, duration);
+
+            addViewportJob(job);
         } else {
-            mJobs.add(job);
+            Log.e(LOG_TAG, "Unable to execute centerViewToAnimated(...) on API level < 11");
         }
     }
 
@@ -1144,6 +1255,20 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
     }
 
     /**
+     * Returns true if keeping the position on rotation is enabled and false if not.
+     */
+    public boolean isKeepPositionOnRotation() {
+        return mKeepPositionOnRotation;
+    }
+
+    /**
+     * Sets whether the chart should keep its position (zoom / scroll) after a rotation (orientation change)
+     */
+    public void setKeepPositionOnRotation(boolean keepPositionOnRotation) {
+        mKeepPositionOnRotation = keepPositionOnRotation;
+    }
+
+    /**
      * Returns the Highlight object (contains x-index and DataSet index) of the
      * selected value at the given touch point inside the Line-, Scatter-, or
      * CandleStick-Chart.
@@ -1259,7 +1384,7 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
                 mViewPortHandler.contentLeft(), mViewPortHandler.contentBottom()
         };
         getTransformer(AxisDependency.LEFT).pixelsToValue(pts);
-        return (pts[0] <= 0) ? 0 : (int) (pts[0] + 1.0f);
+        return (pts[0] <= 0) ? 0 : (int)Math.ceil(pts[0]);
     }
 
     /**
@@ -1274,7 +1399,7 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
                 mViewPortHandler.contentRight(), mViewPortHandler.contentBottom()
         };
         getTransformer(AxisDependency.LEFT).pixelsToValue(pts);
-        return (pts[0] >= mData.getXValCount()) ? mData.getXValCount() - 1 : (int) pts[0];
+        return Math.min(mData.getXValCount() - 1, (int)Math.floor(pts[0]));
     }
 
     /**
@@ -1520,5 +1645,29 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
         }
 
         return null;
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+
+        // Saving current position of chart.
+        float[] pts = new float[2];
+        if (mKeepPositionOnRotation) {
+            pts[0] = mViewPortHandler.contentLeft();
+            pts[1] = mViewPortHandler.contentTop();
+            getTransformer(AxisDependency.LEFT).pixelsToValue(pts);
+        }
+
+        //Superclass transforms chart.
+        super.onSizeChanged(w, h, oldw, oldh);
+
+        if (mKeepPositionOnRotation) {
+
+            //Restoring old position of chart.
+            getTransformer(AxisDependency.LEFT).pointValuesToPixel(pts);
+            mViewPortHandler.centerViewPort(pts, this);
+        } else {
+            mViewPortHandler.refresh(mViewPortHandler.getMatrixTouch(), this, true);
+        }
     }
 }

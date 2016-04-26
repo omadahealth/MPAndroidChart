@@ -23,16 +23,16 @@ import com.github.mikephil.charting.components.Legend.LegendPosition;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
+import com.github.mikephil.charting.formatter.PercentFormatter;
+import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.interfaces.datasets.IDataSet;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.ColorTemplate;
-import com.github.mikephil.charting.highlight.Highlight;
-import com.github.mikephil.charting.formatter.PercentFormatter;
 import com.xxmassdeveloper.mpchartexample.notimportant.DemoBase;
 
 import java.util.ArrayList;
 
-public class PieChartActivity extends DemoBase implements OnSeekBarChangeListener,
+public class PiePolylineChartActivity extends DemoBase implements OnSeekBarChangeListener,
         OnChartValueSelectedListener {
 
     private PieChart mChart;
@@ -71,6 +71,8 @@ public class PieChartActivity extends DemoBase implements OnSeekBarChangeListene
         mChart.setCenterTextTypeface(Typeface.createFromAsset(getAssets(), "OpenSans-Light.ttf"));
         mChart.setCenterText(generateCenterSpannableText());
 
+        mChart.setExtraOffsets(5.f, 5.f, 5.f, 5.f);
+
         mChart.setDrawHoleEnabled(true);
         mChart.setHoleColor(Color.WHITE);
 
@@ -100,9 +102,7 @@ public class PieChartActivity extends DemoBase implements OnSeekBarChangeListene
 
         Legend l = mChart.getLegend();
         l.setPosition(LegendPosition.RIGHT_OF_CHART);
-        l.setXEntrySpace(7f);
-        l.setYEntrySpace(0f);
-        l.setYOffset(0f);
+        l.setEnabled(false);
     }
 
     @Override
@@ -224,10 +224,17 @@ public class PieChartActivity extends DemoBase implements OnSeekBarChangeListene
         dataSet.setColors(colors);
         //dataSet.setSelectionShift(0f);
 
+
+        dataSet.setValueLinePart1OffsetPercentage(80.f);
+        dataSet.setValueLinePart1Length(0.3f);
+        dataSet.setValueLinePart2Length(0.4f);
+        // dataSet.setXValuePosition(PieDataSet.ValuePosition.OUTSIDE_SLICE);
+        dataSet.setYValuePosition(PieDataSet.ValuePosition.OUTSIDE_SLICE);
+
         PieData data = new PieData(xVals, dataSet);
         data.setValueFormatter(new PercentFormatter());
         data.setValueTextSize(11f);
-        data.setValueTextColor(Color.WHITE);
+        data.setValueTextColor(Color.BLACK);
         data.setValueTypeface(tf);
         mChart.setData(data);
 

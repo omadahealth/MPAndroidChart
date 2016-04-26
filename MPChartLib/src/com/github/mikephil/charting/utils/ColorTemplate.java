@@ -19,13 +19,13 @@ public class ColorTemplate {
     /**
      * an "invalid" color that indicates that no color is set
      */
-    public static final int COLOR_NONE = -1;
+    public static final int COLOR_NONE = 0x00112233;
 
     /**
      * this "color" is used for the Legend creation and indicates that the next
      * form should be skipped
      */
-    public static final int COLOR_SKIP = -2;
+    public static final int COLOR_SKIP = 0x00112234;
 
     /**
      * THE COLOR THEMES ARE PREDEFINED (predefined color integer arrays), FEEL
@@ -51,6 +51,9 @@ public class ColorTemplate {
             Color.rgb(192, 255, 140), Color.rgb(255, 247, 140), Color.rgb(255, 208, 140),
             Color.rgb(140, 234, 255), Color.rgb(255, 140, 157)
     };
+    public static final int[] MATERIAL_COLORS = {
+            rgb("#2ecc71"), rgb("#f1c40f"), rgb("#e74c3c"), rgb("#3498db")
+    };
 
     /**
      * Converts the given hex-color-string to rgb.
@@ -73,6 +76,10 @@ public class ColorTemplate {
      */
     public static int getHoloBlue() {
         return Color.rgb(51, 181, 229);
+    }
+
+    public static int getColorWithAlphaComponent(int color, int alpha) {
+        return (color & 0xffffff) | ((alpha & 0xff) << 24);
     }
 
     /**
